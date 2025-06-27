@@ -1,0 +1,22 @@
+[Llaves básicas]
+[Llaves básicas]    
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+.vs/
+.vscode/
+.idea/
+
+[Otros]
+*.csproj
+*.unityproj
+*.sln
+*.user
+*.pidb
+*.booproj
+*.svd
+*.pdb

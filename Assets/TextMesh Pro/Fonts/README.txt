@@ -1,0 +1,3 @@
+To learn more about the font family and its license, visit https://www.fontmirror.com/noto-color-emoji
+
+Noto Color Emoji: A vibrant, playful font bursting with diverse and expressive characters.  Its cheerful, colorful emojis inject personality and warmth into any text.  Perfect for informal projects, social media, or adding a touch of fun to digital designs.  A feast for the eyes, and a joy to use.
