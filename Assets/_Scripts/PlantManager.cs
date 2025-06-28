@@ -93,7 +93,7 @@ public class PlantManager : MonoBehaviour
 
     // Eventos para que el MissionManager se suscriba
     public delegate void PlantEventHandler(PlantData plant);
-    public static event PlantEventHandler OnPlantHarvested;
+    public static event PlantEventHandler OnPlantHarvested; // ¡Este es el evento!
 
     void Start()
     {
@@ -104,14 +104,14 @@ public class PlantManager : MonoBehaviour
         if (defaultGroundTile == null || barrenGroundTile == null) Debug.LogError("Tiles de terreno (arado/árido) no asignados.");
         if (infoText == null) Debug.LogError("Info Text (TextMeshProUGUI) no asignado en PlantManager. ¡Arrastra el objeto InfoText del Canvas al Inspector!");
         if (inventoryText == null) Debug.LogWarning("Inventory Text (TextMeshProUGUI) no asignado en PlantManager. Considera arrastrar un nuevo TextMeshProUGUI del Canvas al Inspector para ver el inventario.");
-        if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. ¡Arrastra el objeto Player del Hierarchy al Inspector!"); // ¡NUEVO!
+        if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. ¡Arrastra el objeto Player del Hierarchy al Inspector!");
 
         // --- INICIALIZACIÓN CRÍTICA DEL TERRENO ---
         groundTilemap.ClearAllTiles();
 
         if (groundTilemap.cellBounds.size.x == 0 || groundTilemap.cellBounds.size.y == 0)
         {
-            Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área de 20x20 para pruebas.");
+            Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área de 20x20 para pruebas."); //
             for (int x = -10; x < 10; x++)
             {
                 for (int y = -10; y < 10; y++)
@@ -142,16 +142,12 @@ public class PlantManager : MonoBehaviour
 
     void Update()
     {
-        // --- CAMBIO DE LÓGICA DE INTERACCIÓN ---
-        // Ahora se usa la tecla espacio y la posición del jugador
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             if (playerTransform != null)
             {
-                // Convierte la posición del jugador a la posición de la celda en la cuadrícula
                 Vector3Int playerCellPosition = groundTilemap.WorldToCell(playerTransform.position);
 
-                // Solo interactúa si la celda existe en el groundTilemap
                 if (groundTilemap.HasTile(playerCellPosition))
                 {
                     HandleCellInteraction(playerCellPosition);
@@ -167,9 +163,6 @@ public class PlantManager : MonoBehaviour
             }
         }
 
-        // --- Fin CAMBIO DE LÓGICA DE INTERACCIÓN ---
-
-        // Avanzar el crecimiento de las plantas (esta lógica se mantiene igual)
         List<Vector3Int> cellsToUpdate = new List<Vector3Int>(plantedAreas.Keys);
         foreach (var cellPosition in cellsToUpdate)
         {
@@ -196,9 +189,8 @@ public class PlantManager : MonoBehaviour
             {
                 DisplayMessage($"Planta de {plant.plantName} creciendo: {plant.currentGrowthProgress:F1}/{plant.growthTime:F1}");
             }
-            else // La celda existe en plantedAreas pero no hay planta (tierra arada vacía)
+            else
             {
-                // Intenta sembrar Zanahoria, si no hay, Tomate, y si no, Rosa.
                 if (TrySeedPlant(cellPosition, "Semilla de Zanahoria")) return;
                 if (TrySeedPlant(cellPosition, "Semilla de Tomate")) return;
                 if (TrySeedPlant(cellPosition, "Semilla de Rosa")) return;
@@ -206,7 +198,7 @@ public class PlantManager : MonoBehaviour
                 DisplayMessage("No hay semillas disponibles de los tipos predeterminados para sembrar o no tienes ninguna.");
             }
         }
-        else // La celda no está en plantedAreas, significa que no ha sido arada aún
+        else
         {
             TillSoil(cellPosition);
         }
@@ -284,6 +276,9 @@ public class PlantManager : MonoBehaviour
                 }
                 UpdateInventoryUI();
                 DisplayMessage($"¡Cosechada {plant.plantName}! Has obtenido {harvestedItem}.");
+
+                // ¡¡¡NUEVA LÍNEA CLAVE PARA QUE AVANCEN LAS MISIONES!!!
+                OnPlantHarvested?.Invoke(plant); // Dispara el evento de cosecha, pasando los datos de la planta
             }
             else
             {
