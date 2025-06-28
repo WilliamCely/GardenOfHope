@@ -442,6 +442,7 @@ MonoBehaviour:
     harvestSprite: {fileID: 0}
     seedItemName: Semilla de Rosa
     harvestedItemName: Rosa
+  playerTransform: {fileID: 1922175635}
 --- !u!114 &519997622
 MonoBehaviour:
   m_ObjectHideFlags: 0

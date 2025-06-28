@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
+using UnityEngine.InputSystem; // Necesario para el nuevo Input System
 using TMPro; // ¡IMPORTANTE! Necesario para TextMeshProUGUI
 
 // Clase para definir los datos de una planta específica
@@ -76,10 +76,13 @@ public class PlantManager : MonoBehaviour
 
     [Header("UI Elementos")]
     public TMPro.TextMeshProUGUI infoText;     // Asignar desde el Inspector
-    public TMPro.TextMeshProUGUI inventoryText; // ¡NUEVO! Para mostrar el inventario
+    public TMPro.TextMeshProUGUI inventoryText; // Para mostrar el inventario
 
     [Header("Tipos de Plantas")]
     public PlantDefinition[] plantDefinitions; // Array de definiciones de plantas
+
+    [Header("Referencias del Juego")]
+    public Transform playerTransform; // ¡NUEVO! Asigna el objeto Player aquí en el Inspector
 
     // --- INVENTARIO ---
     private Dictionary<string, int> inventory = new Dictionary<string, int>();
@@ -100,17 +103,18 @@ public class PlantManager : MonoBehaviour
         if (plantTilemap == null) Debug.LogError("Plant Tilemap no asignado en PlantManager.");
         if (defaultGroundTile == null || barrenGroundTile == null) Debug.LogError("Tiles de terreno (arado/árido) no asignados.");
         if (infoText == null) Debug.LogError("Info Text (TextMeshProUGUI) no asignado en PlantManager. ¡Arrastra el objeto InfoText del Canvas al Inspector!");
-        if (inventoryText == null) Debug.LogWarning("Inventory Text (TextMeshProUGUI) no asignado en PlantManager. Considera arrastrar un nuevo TextMeshProUGUI del Canvas al Inspector para ver el inventario."); // Mensaje para el nuevo UI
+        if (inventoryText == null) Debug.LogWarning("Inventory Text (TextMeshProUGUI) no asignado en PlantManager. Considera arrastrar un nuevo TextMeshProUGUI del Canvas al Inspector para ver el inventario.");
+        if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. ¡Arrastra el objeto Player del Hierarchy al Inspector!"); // ¡NUEVO!
 
         // --- INICIALIZACIÓN CRÍTICA DEL TERRENO ---
-        groundTilemap.ClearAllTiles(); // ¡Esta línea es CRUCIAL!
+        groundTilemap.ClearAllTiles();
 
         if (groundTilemap.cellBounds.size.x == 0 || groundTilemap.cellBounds.size.y == 0)
         {
-            Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área de 20x20 para pruebas."); //
-            for (int x = -10; x < 10; x++) // Ejemplo de rango manual
+            Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área de 20x20 para pruebas.");
+            for (int x = -10; x < 10; x++)
             {
-                for (int y = -10; y < 10; y++) // Ejemplo de rango manual
+                for (int y = -10; y < 10; y++)
                 {
                     Vector3Int pos = new Vector3Int(x, y, 0);
                     groundTilemap.SetTile(pos, barrenGroundTile);
@@ -127,40 +131,45 @@ public class PlantManager : MonoBehaviour
         // --- FIN INICIALIZACIÓN CRÍTICA ---
 
         // --- INICIALIZACIÓN DEL INVENTARIO ---
-        // Puedes ajustar las cantidades iniciales aquí
         inventory["Semilla de Zanahoria"] = 5;
-        inventory["Zanahoria"] = 0; // Productos cosechados
+        inventory["Zanahoria"] = 0;
         inventory["Semilla de Tomate"] = 3;
         inventory["Tomate"] = 0;
         inventory["Semilla de Rosa"] = 2;
         inventory["Rosa"] = 0;
-        // --- Puedes añadir más tipos de semillas o productos aquí ---
-        // Ejemplo:
-        // inventory["Semilla de Manzana"] = 1;
-        // inventory["Manzana"] = 0;
-        // inventory["Semilla de Tulipán"] = 4;
-        // inventory["Tulipán"] = 0;
-        // -----------------------------------------------------------
-
-        UpdateInventoryUI(); // Actualiza el UI del inventario al inicio
+        UpdateInventoryUI();
     }
 
     void Update()
     {
-        // Nuevo sistema de entrada para detectar clic izquierdo
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        // --- CAMBIO DE LÓGICA DE INTERACCIÓN ---
+        // Ahora se usa la tecla espacio y la posición del jugador
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            Vector3Int clickedCell = groundTilemap.WorldToCell(mouseWorldPos);
-
-            // Solo interactúa si la celda existe en el groundTilemap
-            if (groundTilemap.HasTile(clickedCell))
+            if (playerTransform != null)
             {
-                HandleCellInteraction(clickedCell);
+                // Convierte la posición del jugador a la posición de la celda en la cuadrícula
+                Vector3Int playerCellPosition = groundTilemap.WorldToCell(playerTransform.position);
+
+                // Solo interactúa si la celda existe en el groundTilemap
+                if (groundTilemap.HasTile(playerCellPosition))
+                {
+                    HandleCellInteraction(playerCellPosition);
+                }
+                else
+                {
+                    DisplayMessage("El jugador no está sobre una celda de terreno válida.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Player Transform no está asignado en PlantManager. No se puede interactuar con el terreno.");
             }
         }
 
-        // Avanzar el crecimiento de las plantas
+        // --- Fin CAMBIO DE LÓGICA DE INTERACCIÓN ---
+
+        // Avanzar el crecimiento de las plantas (esta lógica se mantiene igual)
         List<Vector3Int> cellsToUpdate = new List<Vector3Int>(plantedAreas.Keys);
         foreach (var cellPosition in cellsToUpdate)
         {
@@ -168,8 +177,8 @@ public class PlantManager : MonoBehaviour
             if (plant.isPlanted && !plant.isReadyToHarvest)
             {
                 plant.AdvanceGrowth(Time.deltaTime);
-                plantedAreas[cellPosition] = plant; // Actualiza la PlantData en el diccionario
-                UpdatePlantSprite(plant); // Actualiza el sprite visual de la planta
+                plantedAreas[cellPosition] = plant;
+                UpdatePlantSprite(plant);
             }
         }
     }
@@ -189,13 +198,10 @@ public class PlantManager : MonoBehaviour
             }
             else // La celda existe en plantedAreas pero no hay planta (tierra arada vacía)
             {
-                // Sembrar la primera semilla disponible (o la que se seleccione en el futuro)
-                // Aquí, podrías añadir lógica para permitir al jugador elegir qué sembrar.
-                // Por ahora, intenta sembrar Zanahoria, si no hay, Tomate, y si no, Rosa.
+                // Intenta sembrar Zanahoria, si no hay, Tomate, y si no, Rosa.
                 if (TrySeedPlant(cellPosition, "Semilla de Zanahoria")) return;
                 if (TrySeedPlant(cellPosition, "Semilla de Tomate")) return;
                 if (TrySeedPlant(cellPosition, "Semilla de Rosa")) return;
-                // ... puedes añadir más TrySeedPlant aquí para otras semillas ...
 
                 DisplayMessage("No hay semillas disponibles de los tipos predeterminados para sembrar o no tienes ninguna.");
             }
@@ -208,22 +214,18 @@ public class PlantManager : MonoBehaviour
 
     void TillSoil(Vector3Int cellPosition)
     {
-        // Solo permite arar tierra árida (barrenGroundTile)
         if (groundTilemap.GetTile(cellPosition) == barrenGroundTile)
         {
-            groundTilemap.SetTile(cellPosition, defaultGroundTile); // Cambia a tierra arada
+            groundTilemap.SetTile(cellPosition, defaultGroundTile);
             DisplayMessage("¡Tierra arada!");
-            // Añade la celda al diccionario, inicializada como vacía
             plantedAreas.Add(cellPosition, new PlantData(cellPosition));
         }
-        // Si el tile es defaultGroundTile, significa que ya está arada, no se debe arar de nuevo
         else if (groundTilemap.GetTile(cellPosition) == defaultGroundTile)
         {
             DisplayMessage("Esta tierra ya está arada.");
         }
     }
 
-    // Nuevo método para intentar sembrar una planta de un tipo específico
     bool TrySeedPlant(Vector3Int cellPosition, string seedInventoryName)
     {
         PlantDefinition plantDefToPlant = null;
@@ -248,28 +250,27 @@ public class PlantManager : MonoBehaviour
                 newPlant.isReadyToHarvest = false;
                 newPlant.currentStage = 0;
                 newPlant.currentGrowthProgress = 0f;
-                newPlant.harvestedItemType = plantDefToPlant.harvestedItemName; // Asigna el tipo de ítem cosechado
+                newPlant.harvestedItemType = plantDefToPlant.harvestedItemName;
 
                 plantedAreas[cellPosition] = newPlant;
                 UpdatePlantSprite(newPlant);
 
-                inventory[seedInventoryName]--; // Decrementa la cantidad de semillas
-                UpdateInventoryUI(); // Actualiza el UI del inventario
+                inventory[seedInventoryName]--;
+                UpdateInventoryUI();
                 DisplayMessage($"¡Sembrada {newPlant.plantName}!");
                 return true;
             }
         }
-        return false; // No se pudo sembrar por falta de semillas o la celda no está lista
+        return false;
     }
 
     void HarvestPlant(Vector3Int cellPosition, PlantData plant)
     {
         if (plant.isReadyToHarvest)
         {
-            plantTilemap.SetTile(cellPosition, null); // Elimina el sprite de la planta
-            groundTilemap.SetTile(cellPosition, defaultGroundTile); // Asegura que el fondo sea tierra arada
+            plantTilemap.SetTile(cellPosition, null);
+            groundTilemap.SetTile(cellPosition, defaultGroundTile);
 
-            // Añade el producto cosechado al inventario
             string harvestedItem = plant.harvestedItemType;
             if (!string.IsNullOrEmpty(harvestedItem))
             {
@@ -281,7 +282,7 @@ public class PlantManager : MonoBehaviour
                 {
                     inventory.Add(harvestedItem, 1);
                 }
-                UpdateInventoryUI(); // Actualiza el UI del inventario
+                UpdateInventoryUI();
                 DisplayMessage($"¡Cosechada {plant.plantName}! Has obtenido {harvestedItem}.");
             }
             else
@@ -289,16 +290,14 @@ public class PlantManager : MonoBehaviour
                 DisplayMessage($"¡Cosechada {plant.plantName}! (No se especificó un ítem de cosecha)");
             }
 
-            // Reestablece la celda a un estado "arado y vacío", listo para una nueva siembra
             plant.isPlanted = false;
             plant.isReadyToHarvest = false;
             plant.currentStage = 0;
             plant.currentGrowthProgress = 0f;
             plant.plantName = "";
             plant.growthStages = null;
-            plant.harvestedItemType = ""; // Limpia el tipo de ítem cosechado
+            plant.harvestedItemType = "";
 
-            // Conserva la PlantData en el diccionario, solo actualiza su estado.
             plantedAreas[cellPosition] = plant;
         }
         else
@@ -317,18 +316,17 @@ public class PlantManager : MonoBehaviour
         }
         else
         {
-            plantTilemap.SetTile(plant.gridPosition, null); // Si no está plantada o no tiene sprites, borra el tile
+            plantTilemap.SetTile(plant.gridPosition, null);
         }
     }
 
-    // Métodos para mostrar y limpiar mensajes en el UI
     void DisplayMessage(string message)
     {
         if (infoText != null)
         {
             infoText.text = message;
             CancelInvoke("ClearMessage");
-            Invoke("ClearMessage", 3f); // El mensaje desaparece después de 3 segundos
+            Invoke("ClearMessage", 3f);
         }
     }
 
@@ -340,7 +338,6 @@ public class PlantManager : MonoBehaviour
         }
     }
 
-    // --- NUEVO MÉTODO PARA ACTUALIZAR EL UI DEL INVENTARIO ---
     void UpdateInventoryUI()
     {
         if (inventoryText != null)
@@ -353,5 +350,4 @@ public class PlantManager : MonoBehaviour
             inventoryText.text = inventoryString;
         }
     }
-    // --- FIN NUEVO MÉTODO ---
 }
