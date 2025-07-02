@@ -1,10 +1,10 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using UnityEngine.InputSystem; // Necesario para el nuevo Input System
-using TMPro; // °IMPORTANTE! Necesario para TextMeshProUGUI
+using TMPro; // ¬°IMPORTANTE! Necesario para TextMeshProUGUI
 
-// Clase para definir los datos de una planta especÌfica
+// Clase para definir los datos de una planta espec√≠fica
 [System.Serializable]
 public class PlantDefinition
 {
@@ -15,8 +15,8 @@ public class PlantDefinition
     public Sprite harvestSprite;      // Sprite final al cosechar (opcional)
 
     // Nuevos campos para el inventario
-    public string seedItemName;       // Nombre del Ìtem de la semilla en el inventario (ej. "Semilla de Zanahoria")
-    public string harvestedItemName;  // Nombre del Ìtem cosechado en el inventario (ej. "Zanahoria")
+    public string seedItemName;       // Nombre del √≠tem de la semilla en el inventario (ej. "Semilla de Zanahoria")
+    public string harvestedItemName;  // Nombre del √≠tem cosechado en el inventario (ej. "Zanahoria")
 }
 
 [System.Serializable]
@@ -30,12 +30,12 @@ public class PlantData
     public bool isPlanted;
     public bool isReadyToHarvest;
     public Vector3Int gridPosition;
-    public string harvestedItemType; // Para saber quÈ Ìtem se cosecha
+    public string harvestedItemType; // Para saber qu√© √≠tem se cosecha
 
     public PlantData(Vector3Int pos)
     {
         gridPosition = pos;
-        isPlanted = false;
+        isPlanted = false; // Inicialmente no plantada
         isReadyToHarvest = false;
         currentStage = 0;
         currentGrowthProgress = 0f;
@@ -56,10 +56,10 @@ public class PlantData
                 isReadyToHarvest = true;
             }
 
-            if (growthStages != null && growthStages.Length > 0)
+            if (growthStages != null && growthStages.Length > 0 && growthTime > 0) // A√±adida comprobaci√≥n growthTime > 0
             {
                 float stageProgress = currentGrowthProgress / growthTime;
-                // Calcula la nueva etapa, asegur·ndose de no exceder el Ìndice del array
+                // Calcula la nueva etapa, asegur√°ndose de no exceder el √≠ndice del array
                 int newStage = Mathf.FloorToInt(stageProgress * growthStages.Length);
                 currentStage = Mathf.Min(newStage, growthStages.Length - 1);
             }
@@ -72,17 +72,17 @@ public class PlantManager : MonoBehaviour
     public Tilemap groundTilemap;
     public Tilemap plantTilemap;
     public Tile defaultGroundTile; // Tile para tierra arada
-    public Tile barrenGroundTile; // Tile para tierra ·rida / sin arar
+    public Tile barrenGroundTile; // Tile para tierra √°rida / sin arar
 
     [Header("UI Elementos")]
-    public TMPro.TextMeshProUGUI infoText;     // Asignar desde el Inspector
+    public TMPro.TextMeshProUGUI infoText;      // Asignar desde el Inspector
     public TMPro.TextMeshProUGUI inventoryText; // Para mostrar el inventario
 
     [Header("Tipos de Plantas")]
     public PlantDefinition[] plantDefinitions; // Array de definiciones de plantas
 
     [Header("Referencias del Juego")]
-    public Transform playerTransform; // °NUEVO! Asigna el objeto Player aquÌ en el Inspector
+    public Transform playerTransform; // ¬°NUEVO! Asigna el objeto Player aqu√≠ en el Inspector
 
     // --- INVENTARIO ---
     private Dictionary<string, int> inventory = new Dictionary<string, int>();
@@ -93,7 +93,7 @@ public class PlantManager : MonoBehaviour
 
     // Eventos para que el MissionManager se suscriba
     public delegate void PlantEventHandler(PlantData plant);
-    public static event PlantEventHandler OnPlantHarvested; // °Este es el evento!
+    public static event PlantEventHandler OnPlantHarvested; // ¬°Este es el evento!
 
     void Start()
     {
@@ -101,52 +101,76 @@ public class PlantManager : MonoBehaviour
 
         if (groundTilemap == null) Debug.LogError("Ground Tilemap no asignado en PlantManager.");
         if (plantTilemap == null) Debug.LogError("Plant Tilemap no asignado en PlantManager.");
-        if (defaultGroundTile == null || barrenGroundTile == null) Debug.LogError("Tiles de terreno (arado/·rido) no asignados.");
-        if (infoText == null) Debug.LogError("Info Text (TextMeshProUGUI) no asignado en PlantManager. °Arrastra el objeto InfoText del Canvas al Inspector!");
+        if (defaultGroundTile == null || barrenGroundTile == null) Debug.LogError("Tiles de terreno (arado/√°rido) no asignados.");
+        if (infoText == null) Debug.LogError("Info Text (TextMeshProUGUI) no asignado en PlantManager. ¬°Arrastra el objeto InfoText del Canvas al Inspector!");
         if (inventoryText == null) Debug.LogWarning("Inventory Text (TextMeshProUGUI) no asignado en PlantManager. Considera arrastrar un nuevo TextMeshProUGUI del Canvas al Inspector para ver el inventario.");
-        if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. °Arrastra el objeto Player del Hierarchy al Inspector!");
+        if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. ¬°Arrastra el objeto Player del Hierarchy al Inspector!");
 
-        // --- INICIALIZACI”N CRÕTICA DEL TERRENO ---
-        groundTilemap.ClearAllTiles();
-
-        if (groundTilemap.cellBounds.size.x == 0 || groundTilemap.cellBounds.size.y == 0)
+        // --- INICIALIZACI√ìN CR√çTICA DEL TERRENO ---
+        // Aseg√∫rate de que el Tilemap exista y sea accesible
+        if (groundTilemap != null)
         {
-            Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un ·rea de 20x20 para pruebas."); //
-            for (int x = -10; x < 10; x++)
+            groundTilemap.ClearAllTiles();
+
+            // Si el Tilemap tiene bounds definidos (ya se pintaron tiles en el editor)
+            if (groundTilemap.cellBounds.size.x > 0 && groundTilemap.cellBounds.size.y > 0)
             {
-                for (int y = -10; y < 10; y++)
+                foreach (var pos in groundTilemap.cellBounds.allPositionsWithin)
                 {
-                    Vector3Int pos = new Vector3Int(x, y, 0);
-                    groundTilemap.SetTile(pos, barrenGroundTile);
+                    // Aseg√∫rate de que solo asignas a celdas que realmente existen y son accesibles
+                    if (groundTilemap.GetTile(pos) == null) // Solo si la celda est√° vac√≠a
+                    {
+                        groundTilemap.SetTile(pos, barrenGroundTile);
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un √°rea de 20x20 para pruebas.");
+                for (int x = -10; x < 10; x++)
+                {
+                    for (int y = -10; y < 10; y++)
+                    {
+                        Vector3Int pos = new Vector3Int(x, y, 0);
+                        groundTilemap.SetTile(pos, barrenGroundTile);
+                    }
                 }
             }
         }
         else
         {
-            foreach (var pos in groundTilemap.cellBounds.allPositionsWithin)
-            {
-                groundTilemap.SetTile(pos, barrenGroundTile);
-            }
+            Debug.LogError("Ground Tilemap es null al inicio, no se puede inicializar el terreno.");
         }
-        // --- FIN INICIALIZACI”N CRÕTICA ---
+        // --- FIN INICIALIZACI√ìN CR√çTICA ---
 
-        // --- INICIALIZACI”N DEL INVENTARIO ---
+        // --- INICIALIZACI√ìN DEL INVENTARIO ---
         inventory["Semilla de Zanahoria"] = 5;
         inventory["Zanahoria"] = 0;
         inventory["Semilla de Tomate"] = 3;
         inventory["Tomate"] = 0;
-        inventory["Semilla de Rosa"] = 2;
-        inventory["Rosa"] = 0;
+        inventory["Semilla de Uva"] = 3;
+        inventory["Uva"] = 0;
+        inventory["Semilla de Platano"] = 3;
+        inventory["Platano"] = 0;
+        inventory["Semilla de Girasol"] = 3;
+        inventory["Girasol"] = 0;
+        inventory["Semilla de Tulipan"] = 3;
+        inventory["Tulipan"] = 0;
         UpdateInventoryUI();
     }
 
     void Update()
     {
+        // Debug.Log("Update method called."); // Verifica que Update se est√° ejecutando
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
+            Debug.Log("Space key pressed!"); // Confirma que la tecla espacio se detecta
             if (playerTransform != null)
             {
                 Vector3Int playerCellPosition = groundTilemap.WorldToCell(playerTransform.position);
+                playerCellPosition.z = 0; // Asegurarse de que el Z sea 0 para Tilemaps 2D
+
+                // Debug.Log($"Player at Grid: {playerCellPosition}"); // Muestra la posici√≥n de la celda del jugador
 
                 if (groundTilemap.HasTile(playerCellPosition))
                 {
@@ -154,12 +178,13 @@ public class PlantManager : MonoBehaviour
                 }
                 else
                 {
-                    DisplayMessage("El jugador no est· sobre una celda de terreno v·lida.");
+                    DisplayMessage("El jugador no est√° sobre una celda de terreno v√°lida.");
+                    Debug.LogWarning($"No hay tile en la posici√≥n: {playerCellPosition}");
                 }
             }
             else
             {
-                Debug.LogError("Player Transform no est· asignado en PlantManager. No se puede interactuar con el terreno.");
+                Debug.LogError("Player Transform no est√° asignado en PlantManager. No se puede interactuar con el terreno.");
             }
         }
 
@@ -170,7 +195,7 @@ public class PlantManager : MonoBehaviour
             if (plant.isPlanted && !plant.isReadyToHarvest)
             {
                 plant.AdvanceGrowth(Time.deltaTime);
-                plantedAreas[cellPosition] = plant;
+                plantedAreas[cellPosition] = plant; // Asegura que los cambios se guarden en el diccionario
                 UpdatePlantSprite(plant);
             }
         }
@@ -178,80 +203,132 @@ public class PlantManager : MonoBehaviour
 
     void HandleCellInteraction(Vector3Int cellPosition)
     {
+        Debug.Log($"Handling interaction at: {cellPosition}");
+        // Primero, verifica si la celda ya tiene un PlantData
         if (plantedAreas.ContainsKey(cellPosition))
         {
             PlantData plant = plantedAreas[cellPosition];
-            if (plant.isPlanted && plant.isReadyToHarvest)
+
+            // Si hay una planta plantada
+            if (plant.isPlanted)
             {
-                HarvestPlant(cellPosition, plant);
+                // Si est√° lista para cosechar
+                if (plant.isReadyToHarvest)
+                {
+                    Debug.Log("Planta lista para cosechar.");
+                    HarvestPlant(cellPosition, plant);
+                }
+                // Si no est√° lista para cosechar (sigue creciendo)
+                else
+                {
+                    DisplayMessage($"Planta de {plant.plantName} creciendo: {plant.currentGrowthProgress:F1}/{plant.growthTime:F1}");
+                    Debug.Log("Planta en crecimiento. No lista para cosechar.");
+                }
             }
-            else if (plant.isPlanted)
-            {
-                DisplayMessage($"Planta de {plant.plantName} creciendo: {plant.currentGrowthProgress:F1}/{plant.growthTime:F1}");
-            }
+            // Si la celda existe en plantedAreas pero no tiene una planta "plantada" (ej. est√° arada pero vac√≠a)
             else
             {
+                Debug.Log("Terreno arado, intentando sembrar...");
+                // Intenta sembrar las semillas en orden de prioridad
                 if (TrySeedPlant(cellPosition, "Semilla de Zanahoria")) return;
                 if (TrySeedPlant(cellPosition, "Semilla de Tomate")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Rosa")) return;
+                if (TrySeedPlant(cellPosition, "Semilla de Uva")) return;
+                if (TrySeedPlant(cellPosition, "Semilla de Platano")) return;
+                if (TrySeedPlant(cellPosition, "Semilla de Girasol")) return;
+                if (TrySeedPlant(cellPosition, "Semilla de Tulipan")) return;
 
                 DisplayMessage("No hay semillas disponibles de los tipos predeterminados para sembrar o no tienes ninguna.");
+                Debug.Log("Fallo al sembrar: No se encontr√≥ semilla disponible o inventario vac√≠o."); // Este es el mensaje que recibiste
             }
         }
+        // Si la celda NO existe en plantedAreas (es tierra √°rida virgen)
         else
         {
+            Debug.Log("Terreno √°rido, intentando arar...");
             TillSoil(cellPosition);
         }
     }
 
     void TillSoil(Vector3Int cellPosition)
     {
+        // Verifica si realmente es tierra √°rida antes de arar
         if (groundTilemap.GetTile(cellPosition) == barrenGroundTile)
         {
-            groundTilemap.SetTile(cellPosition, defaultGroundTile);
-            DisplayMessage("°Tierra arada!");
+            groundTilemap.SetTile(cellPosition, defaultGroundTile); // <-- AQU√ç CAMBIA EL SPRITE
+            DisplayMessage("¬°Tierra arada!");
             plantedAreas.Add(cellPosition, new PlantData(cellPosition));
+            Debug.Log($"Celda {cellPosition} arada y PlantData creada (isPlanted=false).");
         }
         else if (groundTilemap.GetTile(cellPosition) == defaultGroundTile)
         {
-            DisplayMessage("Esta tierra ya est· arada.");
+            DisplayMessage("Esta tierra ya est√° arada.");
+            Debug.Log($"Celda {cellPosition} ya est√° arada.");
+        }
+        else
+        {
+            DisplayMessage("No se puede arar este tipo de terreno.");
+            Debug.Log($"Celda {cellPosition} no es √°rida ni arada. No se puede arar.");
         }
     }
 
     bool TrySeedPlant(Vector3Int cellPosition, string seedInventoryName)
     {
+        Debug.Log($"Intentando sembrar con: {seedInventoryName} en {cellPosition}");
         PlantDefinition plantDefToPlant = null;
+        // Busca la definici√≥n de la planta por el nombre de la semilla
         foreach (var def in plantDefinitions)
         {
             if (def.seedItemName == seedInventoryName)
             {
                 plantDefToPlant = def;
+                Debug.Log($"Definici√≥n de planta encontrada para {seedInventoryName}. Plant Name: {def.plantName}");
                 break;
             }
         }
 
-        if (plantDefToPlant != null && inventory.ContainsKey(seedInventoryName) && inventory[seedInventoryName] > 0)
+        if (plantDefToPlant != null)
         {
-            if (plantedAreas.ContainsKey(cellPosition) && !plantedAreas[cellPosition].isPlanted)
+            Debug.Log($"PlantDefToPlant no es null para {seedInventoryName}.");
+            // Verifica si el jugador tiene la semilla en el inventario
+            if (inventory.ContainsKey(seedInventoryName) && inventory[seedInventoryName] > 0)
             {
-                PlantData newPlant = plantedAreas[cellPosition];
-                newPlant.plantName = plantDefToPlant.plantName;
-                newPlant.growthStages = plantDefToPlant.growthSprites;
-                newPlant.growthTime = plantDefToPlant.growthDuration;
-                newPlant.isPlanted = true;
-                newPlant.isReadyToHarvest = false;
-                newPlant.currentStage = 0;
-                newPlant.currentGrowthProgress = 0f;
-                newPlant.harvestedItemType = plantDefToPlant.harvestedItemName;
+                Debug.Log($"Inventario tiene {inventory[seedInventoryName]} de {seedInventoryName}.");
+                // Verifica que la celda exista en plantedAreas y no tenga una planta ya activa
+                if (plantedAreas.ContainsKey(cellPosition) && !plantedAreas[cellPosition].isPlanted)
+                {
+                    Debug.Log("Celda v√°lida para sembrar (arada y vac√≠a).");
+                    PlantData newPlant = plantedAreas[cellPosition]; // Obt√©n la PlantData existente
+                    newPlant.plantName = plantDefToPlant.plantName;
+                    newPlant.growthStages = plantDefToPlant.growthSprites;
+                    newPlant.growthTime = plantDefToPlant.growthDuration;
+                    newPlant.isPlanted = true;
+                    newPlant.isReadyToHarvest = false;
+                    newPlant.currentStage = 0;
+                    newPlant.currentGrowthProgress = 0f;
+                    newPlant.harvestedItemType = plantDefToPlant.harvestedItemName;
 
-                plantedAreas[cellPosition] = newPlant;
-                UpdatePlantSprite(newPlant);
+                    plantedAreas[cellPosition] = newPlant; // Guarda los cambios en el diccionario
+                    UpdatePlantSprite(newPlant);
 
-                inventory[seedInventoryName]--;
-                UpdateInventoryUI();
-                DisplayMessage($"°Sembrada {newPlant.plantName}!");
-                return true;
+                    inventory[seedInventoryName]--;
+                    UpdateInventoryUI();
+                    DisplayMessage($"¬°Sembrada {newPlant.plantName}!");
+                    Debug.Log($"¬°{newPlant.plantName} sembrada exitosamente en {cellPosition}!");
+                    return true;
+                }
+                else
+                {
+                    Debug.Log($"Fallo al sembrar {seedInventoryName}: La celda {cellPosition} ya tiene una planta o no est√° arada.");
+                }
             }
+            else
+            {
+                Debug.Log($"Fallo al sembrar {seedInventoryName}: No hay suficientes semillas en el inventario.");
+            }
+        }
+        else
+        {
+            Debug.Log($"Fallo al sembrar {seedInventoryName}: No se encontr√≥ la definici√≥n de planta para esta semilla.");
         }
         return false;
     }
@@ -260,8 +337,8 @@ public class PlantManager : MonoBehaviour
     {
         if (plant.isReadyToHarvest)
         {
-            plantTilemap.SetTile(cellPosition, null);
-            groundTilemap.SetTile(cellPosition, defaultGroundTile);
+            plantTilemap.SetTile(cellPosition, null); // Quita la planta del tilemap de plantas
+            groundTilemap.SetTile(cellPosition, defaultGroundTile); // Devuelve la tierra a arado
 
             string harvestedItem = plant.harvestedItemType;
             if (!string.IsNullOrEmpty(harvestedItem))
@@ -275,16 +352,18 @@ public class PlantManager : MonoBehaviour
                     inventory.Add(harvestedItem, 1);
                 }
                 UpdateInventoryUI();
-                DisplayMessage($"°Cosechada {plant.plantName}! Has obtenido {harvestedItem}.");
+                DisplayMessage($"¬°Cosechada {plant.plantName}! Has obtenido 1 {harvestedItem}.");
 
-                // °°°NUEVA LÕNEA CLAVE PARA QUE AVANCEN LAS MISIONES!!!
-                OnPlantHarvested?.Invoke(plant); // Dispara el evento de cosecha, pasando los datos de la planta
+                // ¬°NUEVA L√çNEA CLAVE PARA QUE AVANCEN LAS MISIONES!!!
+                // Se invoca el evento, pasando los datos completos de la planta
+                OnPlantHarvested?.Invoke(plant);
             }
             else
             {
-                DisplayMessage($"°Cosechada {plant.plantName}! (No se especificÛ un Ìtem de cosecha)");
+                DisplayMessage($"¬°Cosechada {plant.plantName}! (No se especific√≥ un √≠tem de cosecha)");
             }
 
+            // Resetea los datos de la planta para que la celda est√© lista para una nueva siembra
             plant.isPlanted = false;
             plant.isReadyToHarvest = false;
             plant.currentStage = 0;
@@ -293,11 +372,12 @@ public class PlantManager : MonoBehaviour
             plant.growthStages = null;
             plant.harvestedItemType = "";
 
-            plantedAreas[cellPosition] = plant;
+            plantedAreas[cellPosition] = plant; // Guarda los cambios reseteados
+            Debug.Log($"Planta {plant.plantName} cosechada en {cellPosition}. Celda reseteada.");
         }
         else
         {
-            DisplayMessage($"La planta de {plant.plantName} a˙n no est· lista para cosechar.");
+            DisplayMessage($"La planta de {plant.plantName} a√∫n no est√° lista para cosechar.");
         }
     }
 
@@ -305,12 +385,22 @@ public class PlantManager : MonoBehaviour
     {
         if (plant.isPlanted && plant.growthStages != null && plant.growthStages.Length > 0)
         {
+            // Crea una nueva instancia de Tile (esto ya lo tienes)
             Tile plantVisualTile = ScriptableObject.CreateInstance<Tile>();
+
+            // Asigna el sprite de la etapa actual (esto ya lo tienes)
             plantVisualTile.sprite = plant.growthStages[plant.currentStage];
+
+            // ¬°IMPORTANTE! Aseg√∫rate de que el color del tile sea blanco
+            // Esto elimina cualquier tintado que pudiera venir por defecto o de otra configuraci√≥n
+            plantVisualTile.color = Color.white;
+
+            // Establece el tile en el Tilemap de plantas (esto ya lo tienes)
             plantTilemap.SetTile(plant.gridPosition, plantVisualTile);
         }
         else
         {
+            // Si no hay planta o no tiene sprites, borra el tile
             plantTilemap.SetTile(plant.gridPosition, null);
         }
     }

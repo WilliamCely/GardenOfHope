@@ -405,7 +405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12637e292d688d84fa9b97960108deeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundTilemap: {fileID: 1745364615}
+  groundTilemap: {fileID: 827659735}
   plantTilemap: {fileID: 1745364615}
   defaultGroundTile: {fileID: 11400000, guid: 0d838a2f98b4fc44fb5537981fcceefb, type: 2}
   barrenGroundTile: {fileID: 11400000, guid: 53eaa94f2439fc746a883cfb39051059, type: 2}
@@ -418,30 +418,60 @@ MonoBehaviour:
     - {fileID: 7590463431650597718, guid: 9d49926cf1b1c344b8c0a02b37166b7e, type: 3}
     - {fileID: -4941104047936887038, guid: 9f50bc48faf13474e8def8eb34aff467, type: 3}
     - {fileID: -1973989560737317156, guid: a75549f1f5eda7e438fba2b8f9dc2f57, type: 3}
-    growthDuration: 10
+    growthDuration: 25
     harvestSprite: {fileID: 0}
     seedItemName: Semilla de Zanahoria
     harvestedItemName: Zanahoria
   - plantName: Tomate
     seedPrefab: {fileID: 6373426889530474047, guid: 68d9f7b31df88414cbbe78da1963d1a8, type: 3}
     growthSprites:
-    - {fileID: 3518472263243864600, guid: f48c01f6b9a867b4dbb7a7e02f73896b, type: 3}
-    - {fileID: 5438602958675376890, guid: 6b1d0f691955c9042bd4fdbbb117629c, type: 3}
-    - {fileID: -8901939532104524081, guid: 58c0cc778693ecb4ba225d1b0db97383, type: 3}
-    growthDuration: 12
+    - {fileID: -4156708711708360358, guid: 51037fddeab0fa44e850bf9d6bcc59c2, type: 3}
+    - {fileID: 3890289331950268551, guid: a3a30f97814b6bd4699c92176d499e07, type: 3}
+    - {fileID: 2309844317713875989, guid: 90c00eaf84451bf4f888a844d6f9592c, type: 3}
+    growthDuration: 30
     harvestSprite: {fileID: 0}
     seedItemName: Semilla de Tomate
     harvestedItemName: Tomate
-  - plantName: Rosa
+  - plantName: Platano
+    seedPrefab: {fileID: 4847778774454418254, guid: 6b17856c45dcb7e41a53e9637c0d16aa, type: 3}
+    growthSprites:
+    - {fileID: 6847186703582468850, guid: 9d9fe75d5a740314a867cd8b9230ed42, type: 3}
+    - {fileID: -266602092475180827, guid: ea815243b958d9b4f93c571f171cb069, type: 3}
+    - {fileID: 7696409782728825150, guid: 2ea5cb1ff718ae849aab74a49ab19065, type: 3}
+    growthDuration: 35
+    harvestSprite: {fileID: 0}
+    seedItemName: Semilla de Platano
+    harvestedItemName: Platano
+  - plantName: Uva
     seedPrefab: {fileID: 5594002831274347566, guid: b9480e10f723e65449a1d2c56cf5e180, type: 3}
     growthSprites:
-    - {fileID: 7590463431650597718, guid: 9d49926cf1b1c344b8c0a02b37166b7e, type: 3}
-    - {fileID: -4941104047936887038, guid: 9f50bc48faf13474e8def8eb34aff467, type: 3}
-    - {fileID: -1973989560737317156, guid: a75549f1f5eda7e438fba2b8f9dc2f57, type: 3}
-    growthDuration: 15
+    - {fileID: -3570272473992033090, guid: 5ec0dc6098cc21d45ae9a33d13662fb9, type: 3}
+    - {fileID: -5892249975956710604, guid: 93264efe7ef434a4aa75863482f25c8e, type: 3}
+    - {fileID: -9043797417506319723, guid: d9443e4ed70fec24988f9e60e6e21536, type: 3}
+    growthDuration: 32
     harvestSprite: {fileID: 0}
-    seedItemName: Semilla de Rosa
-    harvestedItemName: Rosa
+    seedItemName: Semilla de Uva
+    harvestedItemName: Uva
+  - plantName: Girasol
+    seedPrefab: {fileID: 4042464411165662213, guid: 37cfef7cfb1e09f4e8c528698e337e88, type: 3}
+    growthSprites:
+    - {fileID: -1106937333504787539, guid: 1700310baca1e6240aecbdf107cb9f69, type: 3}
+    - {fileID: -2005574596135690795, guid: 1c4b6508b86209b49b97f34d0c273d5c, type: 3}
+    - {fileID: 3024057863783238110, guid: 8b2690b85d5e0144ca58d006685fdcd4, type: 3}
+    growthDuration: 40
+    harvestSprite: {fileID: 0}
+    seedItemName: Semilla de Girasol
+    harvestedItemName: Girasol
+  - plantName: Tulipan
+    seedPrefab: {fileID: 3963914346503752078, guid: 9b055f20ef6ba944ea00fab41e7d12ab, type: 3}
+    growthSprites:
+    - {fileID: -1465067736109378720, guid: 351e973312f47824d9119e6efb01b989, type: 3}
+    - {fileID: 8021189409358928708, guid: 7aa569af0725b9f449bab457c2e1c144, type: 3}
+    - {fileID: -4739389451454602790, guid: 8885ff8ab17af954caed68c05ed78630, type: 3}
+    growthDuration: 35
+    harvestSprite: {fileID: 0}
+    seedItemName: Semilla de Tulipan
+    harvestedItemName: Tulipan
   playerTransform: {fileID: 1922175635}
 --- !u!114 &519997622
 MonoBehaviour:
@@ -705,8 +735,8 @@ Transform:
   m_GameObject: {fileID: 827659732}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13.2794, y: 9.4882, z: 0}
-  m_LocalScale: {x: 2.3477917, y: 1.9488891, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2044816232}
@@ -734,7 +764,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1233,7 +1263,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2012560589}
+  m_Father: {fileID: 2044816232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!483693784 &1745364614
 TilemapRenderer:
@@ -1258,7 +1288,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 10308, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1278,7 +1308,7 @@ TilemapRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
   m_MaxChunkCount: 16
@@ -5805,6 +5835,8 @@ Tilemap:
   m_TileColorArray:
   - m_RefCount: 448
     m_Data: {r: 1, g: 1, b: 1, a: 1}
+  - m_RefCount: 0
+    m_Data: {r: 6.4695e-41, g: 6.4695e-41, b: 6.4695e-41, a: 6.4695e-41}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -5893,7 +5925,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 4
-  m_Sprite: {fileID: -8964340501328404277, guid: 94a4ea926ac1dcb489e3526fa721aa7c, type: 3}
+  m_Sprite: {fileID: -1621809881174467517, guid: c4eeaadce7c247242b7c3dda9c151702, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5970,7 +6002,7 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.65625, y: 1}
+    oldSize: {x: 0.7876923, y: 1.1776923}
     newSize: {x: 0.21, y: 0.32}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
@@ -6084,51 +6116,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2012560587
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2012560589}
-  - component: {fileID: 2012560588}
-  m_Layer: 0
-  m_Name: Grid
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!156049354 &2012560588
-Grid:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2012560587}
-  m_Enabled: 1
-  m_CellSize: {x: 1, y: 1, z: 0}
-  m_CellGap: {x: 0, y: 0, z: 0}
-  m_CellLayout: 0
-  m_CellSwizzle: 0
---- !u!4 &2012560589
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2012560587}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1745364613}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2044816230
 GameObject:
   m_ObjectHideFlags: 0
@@ -6172,6 +6159,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 827659733}
+  - {fileID: 1745364613}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
@@ -6183,7 +6171,6 @@ SceneRoots:
   - {fileID: 2044816232}
   - {fileID: 1922175635}
   - {fileID: 519997620}
-  - {fileID: 2012560589}
   - {fileID: 72722406}
   - {fileID: 1932234001}
   - {fileID: 1525112904}
