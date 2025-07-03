@@ -28,8 +28,9 @@ public class MainMenuController : MonoBehaviour
     // Método que se llamará cuando se haga clic en el botón "Opciones"
     public void OpenOptions()
     {
-        Debug.Log("Abriendo opciones (no implementado aún).");
+        Debug.Log("Abriendo opciones.");
         // Aquí podrías cargar otra escena de opciones, o activar/desactivar un panel de UI
+        SceneManager.LoadScene("CharacterSelectionScene");
     }
 
     // Método que se llamará cuando se haga clic en el botón "Salir"
