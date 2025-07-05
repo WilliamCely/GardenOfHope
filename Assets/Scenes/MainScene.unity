@@ -282,6 +282,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -407,6 +408,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5ac4fcbd47ae094d982be11a65bbcf4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  smoothSpeed: 0.125
+  offset: {x: 0, y: 0, z: -10}
 --- !u!1 &519997618
 GameObject:
   m_ObjectHideFlags: 0
@@ -456,6 +472,7 @@ MonoBehaviour:
   plantTilemap: {fileID: 1745364615}
   defaultGroundTile: {fileID: 11400000, guid: 0d838a2f98b4fc44fb5537981fcceefb, type: 2}
   barrenGroundTile: {fileID: 11400000, guid: 53eaa94f2439fc746a883cfb39051059, type: 2}
+  plowedGroudTile: {fileID: 11400000, guid: 3f2f408972b3902419980191ff0717df, type: 2}
   infoText: {fileID: 689696971}
   inventoryText: {fileID: 1328634315}
   plantDefinitions:
@@ -533,7 +550,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   missionObjectiveText: {fileID: 908639503}
-  activeMissions: []
+  activeMissions:
+  - missionName: 
+    description: 
+    plantTypeRequired: 
+    amountRequired: 0
+    currentProgress: 0
+    isCompleted: 0
+  - missionName: 
+    description: 
+    plantTypeRequired: 
+    amountRequired: 0
+    currentProgress: 0
+    isCompleted: 0
   plantManager: {fileID: 519997621}
 --- !u!1 &619394800
 GameObject:

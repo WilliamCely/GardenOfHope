@@ -73,6 +73,7 @@ public class PlantManager : MonoBehaviour
     public Tilemap plantTilemap;
     public Tile defaultGroundTile; // Tile para tierra arada
     public Tile barrenGroundTile; // Tile para tierra árida / sin arar
+    public Tile plowedGroudTile;
 
     [Header("UI Elementos")]
     public TMPro.TextMeshProUGUI infoText;      // Asignar desde el Inspector
@@ -126,10 +127,15 @@ public class PlantManager : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área de 20x20 para pruebas.");
-                for (int x = -10; x < 10; x++)
+                Debug.LogWarning("Ground Tilemap no tiene Cell Bounds definidos (no hay tiles pintados en el editor). Inicializando un área para pruebas.");
+
+                // --- CAMBIA ESTOS VALORES PARA UN ÁREA MÁS GRANDE ---
+                int halfSize = 50; // Esto creará un área de 40x40 (de -20 a +20)
+                                   // Si quieres 100x100, pon halfSize = 50
+
+                for (int x = -halfSize; x < halfSize; x++) // Ejemplo para X: de -20 a 19
                 {
-                    for (int y = -10; y < 10; y++)
+                    for (int y = -halfSize; y < halfSize; y++) // Ejemplo para Y: de -20 a 19
                     {
                         Vector3Int pos = new Vector3Int(x, y, 0);
                         groundTilemap.SetTile(pos, barrenGroundTile);
@@ -251,21 +257,42 @@ public class PlantManager : MonoBehaviour
 
     void TillSoil(Vector3Int cellPosition)
     {
+        // --- DEBUG: Confirmar que TillSoil es llamado y la posición ---
+        Debug.Log($"TillSoil: Intentando arar la celda en la posición de grilla: {cellPosition}");
+
+        // --- DEBUG: Mostrar qué Tile está actualmente en la posición ---
+        TileBase currentTile = groundTilemap.GetTile(cellPosition);
+        if (currentTile != null)
+        {
+            Debug.Log($"TillSoil: Tile actual en {cellPosition}: {currentTile.name}");
+        }
+        else
+        {
+            Debug.Log($"TillSoil: No hay Tile en {cellPosition} (o es nulo).");
+        }
+
+        // --- DEBUG: Mostrar qué Tiles estamos usando como referencia ---
+        Debug.Log($"TillSoil: barrenGroundTile asignado: {(barrenGroundTile != null ? barrenGroundTile.name : "NULL")}");
+        Debug.Log($"TillSoil: plowedGroudTile asignado: {(plowedGroudTile != null ? plowedGroudTile.name : "NULL")}"); 
+
         // Verifica si realmente es tierra árida antes de arar
         if (groundTilemap.GetTile(cellPosition) == barrenGroundTile)
         {
-            groundTilemap.SetTile(cellPosition, defaultGroundTile); // <-- AQUÍ CAMBIA EL SPRITE
+            Debug.Log($"TillSoil: Condición 'es tierra árida' CUMPLIDA. Cambiando sprite.");
+            groundTilemap.SetTile(cellPosition, plowedGroudTile); // <-- AQUÍ CAMBIA EL SPRITE
             DisplayMessage("¡Tierra arada!");
             plantedAreas.Add(cellPosition, new PlantData(cellPosition));
             Debug.Log($"Celda {cellPosition} arada y PlantData creada (isPlanted=false).");
         }
-        else if (groundTilemap.GetTile(cellPosition) == defaultGroundTile)
+        else if (groundTilemap.GetTile(cellPosition) == plowedGroudTile)
         {
+            Debug.Log($"TillSoil: Condición 'ya está arada' CUMPLIDA. No se hace nada.");
             DisplayMessage("Esta tierra ya está arada.");
             Debug.Log($"Celda {cellPosition} ya está arada.");
         }
         else
         {
+            Debug.Log($"TillSoil: Ninguna condición anterior CUMPLIDA. Tile actual no es árido ni arado.");
             DisplayMessage("No se puede arar este tipo de terreno.");
             Debug.Log($"Celda {cellPosition} no es árida ni arada. No se puede arar.");
         }
@@ -338,7 +365,7 @@ public class PlantManager : MonoBehaviour
         if (plant.isReadyToHarvest)
         {
             plantTilemap.SetTile(cellPosition, null); // Quita la planta del tilemap de plantas
-            groundTilemap.SetTile(cellPosition, defaultGroundTile); // Devuelve la tierra a arado
+            groundTilemap.SetTile(cellPosition, plowedGroudTile); // Devuelve la tierra a arado
 
             string harvestedItem = plant.harvestedItemType;
             if (!string.IsNullOrEmpty(harvestedItem))
