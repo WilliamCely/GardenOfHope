@@ -484,6 +484,8 @@ MonoBehaviour:
     - {fileID: -1973989560737317156, guid: a75549f1f5eda7e438fba2b8f9dc2f57, type: 3}
     growthDuration: 25
     harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: 1160307838286691915, guid: 1ce605e368494814eb3506fd94c85600, type: 3}
+    witheredDuration: 30
     seedItemName: Semilla de Zanahoria
     harvestedItemName: Zanahoria
   - plantName: Tomate
@@ -494,6 +496,8 @@ MonoBehaviour:
     - {fileID: 2309844317713875989, guid: 90c00eaf84451bf4f888a844d6f9592c, type: 3}
     growthDuration: 30
     harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: -8268243850386475608, guid: d1ccbddeccce52c44a60def97d81fb2e, type: 3}
+    witheredDuration: 40
     seedItemName: Semilla de Tomate
     harvestedItemName: Tomate
   - plantName: Platano
@@ -504,18 +508,10 @@ MonoBehaviour:
     - {fileID: 7696409782728825150, guid: 2ea5cb1ff718ae849aab74a49ab19065, type: 3}
     growthDuration: 35
     harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: 1152474010010875942, guid: ddcfed2a0e2e8ce4bbed103b05e063f9, type: 3}
+    witheredDuration: 40
     seedItemName: Semilla de Platano
     harvestedItemName: Platano
-  - plantName: Uva
-    seedPrefab: {fileID: 5594002831274347566, guid: b9480e10f723e65449a1d2c56cf5e180, type: 3}
-    growthSprites:
-    - {fileID: -3570272473992033090, guid: 5ec0dc6098cc21d45ae9a33d13662fb9, type: 3}
-    - {fileID: -5892249975956710604, guid: 93264efe7ef434a4aa75863482f25c8e, type: 3}
-    - {fileID: -9043797417506319723, guid: d9443e4ed70fec24988f9e60e6e21536, type: 3}
-    growthDuration: 32
-    harvestSprite: {fileID: 0}
-    seedItemName: Semilla de Uva
-    harvestedItemName: Uva
   - plantName: Girasol
     seedPrefab: {fileID: 4042464411165662213, guid: 37cfef7cfb1e09f4e8c528698e337e88, type: 3}
     growthSprites:
@@ -524,6 +520,8 @@ MonoBehaviour:
     - {fileID: 3024057863783238110, guid: 8b2690b85d5e0144ca58d006685fdcd4, type: 3}
     growthDuration: 40
     harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: -2099405257829654520, guid: 649ad0bedd535d6489cc33734088728c, type: 3}
+    witheredDuration: 40
     seedItemName: Semilla de Girasol
     harvestedItemName: Girasol
   - plantName: Tulipan
@@ -534,8 +532,22 @@ MonoBehaviour:
     - {fileID: -4739389451454602790, guid: 8885ff8ab17af954caed68c05ed78630, type: 3}
     growthDuration: 35
     harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: 3111724690849653394, guid: 00cfd13ccd1b7ae49bb16002568e14e0, type: 3}
+    witheredDuration: 38
     seedItemName: Semilla de Tulipan
     harvestedItemName: Tulipan
+  - plantName: Uva
+    seedPrefab: {fileID: 5594002831274347566, guid: b9480e10f723e65449a1d2c56cf5e180, type: 3}
+    growthSprites:
+    - {fileID: -3570272473992033090, guid: 5ec0dc6098cc21d45ae9a33d13662fb9, type: 3}
+    - {fileID: -5892249975956710604, guid: 93264efe7ef434a4aa75863482f25c8e, type: 3}
+    - {fileID: -9043797417506319723, guid: d9443e4ed70fec24988f9e60e6e21536, type: 3}
+    growthDuration: 32
+    harvestSprite: {fileID: 0}
+    witheredSprite: {fileID: -1664464454382258483, guid: 3545e186f3259714793062f3cbe43235, type: 3}
+    witheredDuration: 38
+    seedItemName: Semilla de Uva
+    harvestedItemName: Uva
   playerTransform: {fileID: 5112742801583607356, guid: 3d9e767bedba67f44a127807e8c1395c, type: 3}
 --- !u!114 &519997622
 MonoBehaviour:
@@ -551,10 +563,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missionObjectiveText: {fileID: 908639503}
   activeMissions:
-  - missionName: 
-    description: 
-    plantTypeRequired: 
-    amountRequired: 0
+  - missionName: Sembrar Tulipanes
+    description: Siembra 4 Tulipanes
+    plantTypeRequired: Tulipan
+    amountRequired: 4
     currentProgress: 0
     isCompleted: 0
   - missionName: 
