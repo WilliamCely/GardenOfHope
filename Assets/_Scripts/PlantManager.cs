@@ -82,7 +82,7 @@ public class PlantData
             else if (isReadyToHarvest && !isWithered) // Si está lista para cosechar pero no seca
             {
                 timeSinceReadyToHarvest += deltaTime; // Empieza a contar el tiempo para secarse
-                
+
                 // Si ha pasado suficiente tiempo desde que maduró, la planta se seca
                 if (witheredDuration > 0 && timeSinceReadyToHarvest >= witheredDuration)
                 {
@@ -122,9 +122,12 @@ public class PlantManager : MonoBehaviour
     [Header("Referencias del Juego")]
     public Transform playerTransform; // ¡NUEVO! Asigna el objeto Player aquí en el Inspector
 
-    // --- INVENTARIO ---
+    // --- INVENTARIO Y SELECCIÓN DE SEMILLAS ---
     private Dictionary<string, int> inventory = new Dictionary<string, int>();
-    // --- FIN INVENTARIO ---
+    private string currentSelectedSeed; // La semilla que el jugador ha seleccionado para plantar
+    private int currentSeedIndex = 0;   // Índice de la semilla actual en availableSeedTypes
+    private List<string> availableSeedTypes = new List<string>(); // Nombres de todas las semillas definidas
+    // --- FIN INVENTARIO Y SELECCIÓN DE SEMILLAS ---
 
     private Camera mainCamera;
     private Dictionary<Vector3Int, PlantData> plantedAreas = new Dictionary<Vector3Int, PlantData>();
@@ -181,24 +184,50 @@ public class PlantManager : MonoBehaviour
         }
         // --- FIN INICIALIZACIÓN CRÍTICA ---
 
-        // --- INICIALIZACIÓN DEL INVENTARIO ---
-        inventory["Semilla de Zanahoria"] = 5;
-        inventory["Zanahoria"] = 0;
-        inventory["Semilla de Tomate"] = 3;
-        inventory["Tomate"] = 0;
-        inventory["Semilla de Uva"] = 3;
-        inventory["Uva"] = 0;
-        inventory["Semilla de Platano"] = 3;
-        inventory["Platano"] = 0;
-        inventory["Semilla de Girasol"] = 3;
-        inventory["Girasol"] = 0;
-        inventory["Semilla de Tulipan"] = 3;
-        inventory["Tulipan"] = 0;
-        UpdateInventoryUI();
+        // --- INICIALIZACIÓN DEL INVENTARIO Y TIPOS DE SEMILLAS ---
+        // Aseguramos que todas las semillas de las definiciones estén en el inventario, incluso con 0 cantidad.
+        foreach (var def in plantDefinitions)
+        {
+            if (!inventory.ContainsKey(def.seedItemName))
+            {
+                inventory[def.seedItemName] = 0; // Inicializa a 0 si no existe
+            }
+            if (!availableSeedTypes.Contains(def.seedItemName))
+            {
+                availableSeedTypes.Add(def.seedItemName);
+            }
+            // También asegura que el ítem cosechado esté en el inventario
+            if (!inventory.ContainsKey(def.harvestedItemName))
+            {
+                inventory[def.harvestedItemName] = 0;
+            }
+        }
+
+        // Añadir algunas semillas iniciales para prueba
+        inventory["Semilla de Zanahoria"] = 20;
+        inventory["Semilla de Tomate"] = 25;
+        inventory["Semilla de Uva"] = 18;
+        inventory["Semilla de Platano"] = 20;
+        inventory["Semilla de Girasol"] = 25;
+        inventory["Semilla de Tulipan"] = 15;
+
+        // Establecer la semilla inicial seleccionada
+        if (availableSeedTypes.Count > 0)
+        {
+            currentSelectedSeed = availableSeedTypes[currentSeedIndex];
+        }
+        else
+        {
+            Debug.LogWarning("No hay definiciones de plantas con ítems de semillas. La selección de semillas no funcionará.");
+            currentSelectedSeed = "Ninguna Semilla Disponible";
+        }
+
+        UpdateInventoryUI(); // Muestra el estado inicial del inventario y la semilla seleccionada
     }
 
     void Update()
     {
+        // Interacción con el terreno (Space)
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             Debug.Log("Space key pressed!");
@@ -223,6 +252,13 @@ public class PlantManager : MonoBehaviour
             }
         }
 
+        // Ciclar semillas (Tab)
+        if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+        {
+            CycleSeeds();
+        }
+
+        // Actualizar el crecimiento de las plantas
         List<Vector3Int> cellsToUpdate = new List<Vector3Int>(plantedAreas.Keys);
         foreach (var cellPosition in cellsToUpdate)
         {
@@ -233,12 +269,28 @@ public class PlantManager : MonoBehaviour
                 plantedAreas[cellPosition] = plant; // Asegura que los cambios se guarden en el diccionario
                 UpdatePlantSprite(plant);
             }
-             else if (plant.isPlanted && plant.isWithered) // Si está seca, solo actualiza el sprite para asegurar que se vea marchita
+            else if (plant.isPlanted && plant.isWithered) // Si está seca, solo actualiza el sprite para asegurar que se vea marchita
             {
                 UpdatePlantSprite(plant);
             }
         }
     }
+
+    // --- NUEVO MÉTODO: Para ciclar entre los tipos de semillas disponibles ---
+    void CycleSeeds()
+    {
+        if (availableSeedTypes.Count == 0)
+        {
+            DisplayMessage("No hay tipos de semillas definidos para seleccionar.");
+            return;
+        }
+
+        currentSeedIndex = (currentSeedIndex + 1) % availableSeedTypes.Count;
+        currentSelectedSeed = availableSeedTypes[currentSeedIndex];
+        DisplayMessage($"Semilla seleccionada: {currentSelectedSeed}");
+        UpdateInventoryUI(); // Actualiza la UI para mostrar la nueva semilla seleccionada
+    }
+    // -----------------------------------------------------------------------
 
     void HandleCellInteraction(Vector3Int cellPosition)
     {
@@ -272,17 +324,17 @@ public class PlantManager : MonoBehaviour
             // Si la celda existe en plantedAreas pero no tiene una planta "plantada" (ej. está arada pero vacía)
             else
             {
-                Debug.Log("Terreno arado y vacío, intentando sembrar...");
-                // Intenta sembrar las semillas en orden de prioridad
-                if (TrySeedPlant(cellPosition, "Semilla de Zanahoria")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Tomate")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Uva")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Platano")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Girasol")) return;
-                if (TrySeedPlant(cellPosition, "Semilla de Tulipan")) return;
-
-                DisplayMessage("No hay semillas disponibles de los tipos predeterminados para sembrar o no tienes ninguna.");
-                Debug.Log("Fallo al sembrar: No se encontró semilla disponible o inventario vacío.");
+                Debug.Log("Terreno arado y vacío, intentando sembrar con la semilla seleccionada...");
+                // Intenta sembrar SOLO la semilla actualmente seleccionada
+                if (currentSelectedSeed != "Ninguna Semilla Disponible" && TrySeedPlant(cellPosition, currentSelectedSeed))
+                {
+                    // Éxito al sembrar
+                }
+                else
+                {
+                    DisplayMessage($"No puedes sembrar {currentSelectedSeed}. Revisa tu inventario o selecciona otra semilla (tecla Tab).");
+                    Debug.Log($"Fallo al sembrar: No se pudo sembrar {currentSelectedSeed}.");
+                }
             }
         }
         // Si la celda NO existe en plantedAreas (es tierra árida virgen)
@@ -297,7 +349,7 @@ public class PlantManager : MonoBehaviour
     {
         Debug.Log($"TillSoil: Intentando arar la celda en la posición de grilla: {cellPosition}");
         TileBase currentTile = groundTilemap.GetTile(cellPosition);
-        
+
         if (currentTile != null)
         {
             Debug.Log($"TillSoil: Tile actual en {cellPosition}: {currentTile.name}");
@@ -308,7 +360,7 @@ public class PlantManager : MonoBehaviour
         }
 
         Debug.Log($"TillSoil: barrenGroundTile asignado: {(barrenGroundTile != null ? barrenGroundTile.name : "NULL")}");
-        Debug.Log($"TillSoil: plowedGroudTile asignado: {(plowedGroudTile != null ? plowedGroudTile.name : "NULL")}"); 
+        Debug.Log($"TillSoil: plowedGroudTile asignado: {(plowedGroudTile != null ? plowedGroudTile.name : "NULL")}");
 
         // Verifica si realmente es tierra árida antes de arar
         if (groundTilemap.GetTile(cellPosition) == barrenGroundTile)
@@ -458,8 +510,8 @@ public class PlantManager : MonoBehaviour
         plant.plantName = "";
         plant.growthStages = null;
         plant.harvestedItemType = "";
-        plant.witheredSprite = null; 
-        plant.witheredDuration = 0f; 
+        plant.witheredSprite = null;
+        plant.witheredDuration = 0f;
 
         plantedAreas[cellPosition] = plant; // Guarda los cambios reseteados en el diccionario
     }
@@ -526,6 +578,8 @@ public class PlantManager : MonoBehaviour
             {
                 inventoryString += $"{item.Key}: {item.Value}\n";
             }
+            // Añadir la semilla seleccionada a la UI
+            inventoryString += $"\nSemilla Seleccionada: {currentSelectedSeed}";
             inventoryString = inventoryString.TrimEnd('\n'); // Eliminar el último salto de línea si no es necesario
             inventoryText.text = inventoryString;
         }
