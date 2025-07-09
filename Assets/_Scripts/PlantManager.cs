@@ -36,12 +36,14 @@ public class PlantData
     public bool isReadyToHarvest;
     public Vector3Int gridPosition;
     public string harvestedItemType;
+    public bool isWatered; // ¡NUEVO! Para el estado de riego de la planta
+    public float timeSinceLastWatered; // ¡NUEVO! Para controlar el riego
 
     // --- NUEVOS CAMPOS PARA PLANTAS SECAS ---
-    public bool isWithered;                 // ¡NUEVO! Indica si la planta está seca
-    public float timeSinceReadyToHarvest;  // ¡NUEVO! Contador de tiempo desde que maduró
-    public Sprite witheredSprite;           // ¡NUEVO! Almacena el sprite de marchitamiento
-    public float witheredDuration;         // ¡NUEVO! Almacena la duración hasta marchitarse
+    public bool isWithered;           // ¡NUEVO! Indica si la planta está seca
+    public float timeSinceReadyToHarvest; // ¡NUEVO! Contador de tiempo desde que maduró
+    public Sprite witheredSprite;         // ¡NUEVO! Almacena el sprite de marchitamiento
+    public float witheredDuration;        // ¡NUEVO! Almacena la duración hasta marchitarse
     // ---------------------------------------
 
     public PlantData(Vector3Int pos)
@@ -55,6 +57,8 @@ public class PlantData
         growthStages = null;
         growthTime = 0f;
         harvestedItemType = "";
+        isWatered = false; // Inicialmente no regada
+        timeSinceLastWatered = 0f;
 
         // --- INICIALIZAR NUEVOS CAMPOS ---
         isWithered = false;
@@ -68,14 +72,36 @@ public class PlantData
     {
         if (isPlanted) // Asegurarse de que esté plantada
         {
+            // Resetear el estado de regado después de un tiempo para requerir riego periódico
+            if (isWatered)
+            {
+                timeSinceLastWatered += deltaTime;
+                // Asumiendo que la planta necesita ser regada cada X segundos para continuar creciendo
+                if (timeSinceLastWatered >= 10f) // Ejemplo: necesita ser regada cada 10 segundos
+                {
+                    isWatered = false;
+                    timeSinceLastWatered = 0f;
+                    // Debug.Log($"Planta {plantName} en {gridPosition} necesita ser regada de nuevo.");
+                }
+            }
+
+
             if (!isReadyToHarvest && !isWithered) // Si aún no está lista para cosechar y no está seca
             {
-                currentGrowthProgress += deltaTime;
-                if (growthTime > 0 && currentGrowthProgress >= growthTime)
+                // Solo crece si está regada
+                if (isWatered)
                 {
-                    currentGrowthProgress = growthTime;
-                    isReadyToHarvest = true;
-                    Debug.Log($"Planta {plantName} en {gridPosition} está lista para cosechar!");
+                    currentGrowthProgress += deltaTime;
+                    if (growthTime > 0 && currentGrowthProgress >= growthTime)
+                    {
+                        currentGrowthProgress = growthTime;
+                        isReadyToHarvest = true;
+                        Debug.Log($"Planta {plantName} en {gridPosition} está lista para cosechar!");
+                    }
+                }
+                else
+                {
+                    // Debug.Log($"Planta {plantName} en {gridPosition} no está regada, crecimiento pausado.");
                 }
             }
             // --- NUEVA LÓGICA: Si está lista para cosechar, empieza a secarse ---
@@ -104,6 +130,7 @@ public class PlantData
     }
 }
 
+[RequireComponent(typeof(AudioSource))] // Asegura que haya un AudioSource en este GameObject
 public class PlantManager : MonoBehaviour
 {
     public Tilemap groundTilemap;
@@ -113,7 +140,7 @@ public class PlantManager : MonoBehaviour
     public Tile plowedGroudTile; // Tile para tierra arado
 
     [Header("UI Elementos")]
-    public TMPro.TextMeshProUGUI infoText;       // Asignar desde el Inspector
+    public TMPro.TextMeshProUGUI infoText;        // Asignar desde el Inspector
     public TMPro.TextMeshProUGUI inventoryText; // Para mostrar el inventario
 
     [Header("Tipos de Plantas")]
@@ -121,6 +148,22 @@ public class PlantManager : MonoBehaviour
 
     [Header("Referencias del Juego")]
     public Transform playerTransform; // ¡NUEVO! Asigna el objeto Player aquí en el Inspector
+
+    // --- NUEVO: CONFIGURACIÓN DE SONIDOS ---
+    [Header("Sonidos de Acciones")]
+    public AudioClip tillSoilSound;      // Sonido para arar
+    public AudioClip plantSeedSound;     // Sonido para sembrar
+    public AudioClip waterPlantSound;    // Sonido para regar
+    public AudioClip harvestPlantSound;  // Sonido para cosechar
+    public AudioClip witheredPlantSound; // Sonido cuando la planta se seca
+    public AudioClip missionCompleteSound; // Sonido cuando se completa una misión
+
+    private AudioSource audioSource; // Referencia al componente AudioSource
+    // --- FIN NUEVO: CONFIGURACIÓN DE SONIDOS ---
+
+    // NEW: Color para el efecto de regado
+    public Color wateredColor = new Color(0.7f, 0.9f, 1.0f, 1.0f); // Un azul claro/cielo para indicar regado
+    public Color defaultPlantColor = Color.white; // Color normal de la planta
 
     // --- INVENTARIO Y SELECCIÓN DE SEMILLAS ---
     private Dictionary<string, int> inventory = new Dictionary<string, int>();
@@ -134,11 +177,21 @@ public class PlantManager : MonoBehaviour
 
     // Eventos para que el MissionManager se suscriba
     public delegate void PlantEventHandler(PlantData plant);
-    public static event PlantEventHandler OnPlantHarvested; // ¡Este es el evento!
+    public static event PlantEventHandler OnPlantHarvested;
+    public static event PlantEventHandler OnPlantPlanted; // ¡NUEVO EVENTO! Para misiones de sembrar
+    public static event PlantEventHandler OnPlantWatered; // ¡NUEVO EVENTO! Para misiones de regar
 
     void Start()
     {
         mainCamera = Camera.main;
+
+        // --- Obtener el AudioSource al inicio ---
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            Debug.LogError("No se encontró un componente AudioSource en el GameObject de PlantManager.");
+        }
+        // ----------------------------------------
 
         if (groundTilemap == null) Debug.LogError("Ground Tilemap no asignado en PlantManager.");
         if (plantTilemap == null) Debug.LogError("Plant Tilemap no asignado en PlantManager.");
@@ -204,16 +257,17 @@ public class PlantManager : MonoBehaviour
         }
 
         // Añadir algunas semillas iniciales para prueba
-        inventory["Semilla de Zanahoria"] = 20;
-        inventory["Semilla de Tomate"] = 25;
-        inventory["Semilla de Uva"] = 18;
-        inventory["Semilla de Platano"] = 20;
-        inventory["Semilla de Girasol"] = 25;
-        inventory["Semilla de Tulipan"] = 15;
+        inventory["Semilla de Zanahoria"] = 25;
+        inventory["Semilla de Tomate"] = 28;
+        inventory["Semilla de Uva"] = 30;
+        inventory["Semilla de Platano"] = 25;
+        inventory["Semilla de Girasol"] = 31;
+        inventory["Semilla de Tulipan"] = 23;
 
         // Establecer la semilla inicial seleccionada
         if (availableSeedTypes.Count > 0)
         {
+            currentSeedIndex = 0; // Ensure initial index is valid
             currentSelectedSeed = availableSeedTypes[currentSeedIndex];
         }
         else
@@ -223,7 +277,31 @@ public class PlantManager : MonoBehaviour
         }
 
         UpdateInventoryUI(); // Muestra el estado inicial del inventario y la semilla seleccionada
+
+        // Suscribirse al evento de misión completada (asumiendo que MissionManager lo invoca)
+        // Necesitarás una referencia a tu MissionManager o un evento estático en MissionManager
+        // Ejemplo (si MissionManager.OnMissionCompleted es estático):
+        // MissionManager.OnMissionCompleted += PlayMissionCompleteSound;
+        // Si no es estático, necesitarás obtener la instancia de MissionManager
     }
+
+    void OnEnable()
+    {
+        // Suscribir al evento de plantas secas del propio PlantManager si se invoca desde aquí
+        // Actualmente, la lógica de 'seca' está en PlantData, pero el PlantManager debería "darse cuenta" y reproducir el sonido.
+        // Podríamos modificar PlantData para que invoque un evento, o hacer que PlantManager detecte el cambio de isWithered.
+        // Por ahora, el sonido de marchitar se reproducirá en el ResetPlantCell si la planta estaba seca.
+
+        // ¡IMPORTANTE! Si MissionManager tiene un evento OnMissionCompleted, suscríbete aquí:
+        // MissionManager.OnMissionCompleted += PlayMissionCompleteSound;
+    }
+
+    void OnDisable()
+    {
+        // ¡IMPORTANTE! Desuscribirse del evento cuando el objeto está deshabilitado
+        // MissionManager.OnMissionCompleted -= PlayMissionCompleteSound;
+    }
+
 
     void Update()
     {
@@ -263,13 +341,23 @@ public class PlantManager : MonoBehaviour
         foreach (var cellPosition in cellsToUpdate)
         {
             PlantData plant = plantedAreas[cellPosition];
-            if (plant.isPlanted && !plant.isWithered) // Solo avanza el crecimiento si está plantada y no seca
+            // Solo avanza el crecimiento si está plantada y no seca
+            // La lógica de isWatered ya está dentro de AdvanceGrowth
+            if (plant.isPlanted && !plant.isWithered)
             {
+                bool wasWithered = plant.isWithered; // Guarda el estado antes de avanzar
                 plant.AdvanceGrowth(Time.deltaTime);
                 plantedAreas[cellPosition] = plant; // Asegura que los cambios se guarden en el diccionario
-                UpdatePlantSprite(plant);
+                UpdatePlantSprite(plant); // Update sprite always, even if not growing, to reflect watered state
+
+                // Si la planta se acaba de marchitar en este frame
+                if (!wasWithered && plant.isWithered)
+                {
+                    PlaySound(witheredPlantSound); // Reproduce el sonido de marchitar
+                }
             }
-            else if (plant.isPlanted && plant.isWithered) // Si está seca, solo actualiza el sprite para asegurar que se vea marchita
+            // Si está seca, solo actualiza el sprite para asegurar que se vea marchita
+            else if (plant.isPlanted && plant.isWithered)
             {
                 UpdatePlantSprite(plant);
             }
@@ -302,14 +390,15 @@ public class PlantManager : MonoBehaviour
 
             if (plant.isPlanted)
             {
-                // --- NUEVO: Si está seca, solo se puede "arar" (limpiar) ---
+                // Si está seca, solo se puede "arar" (limpiar)
                 if (plant.isWithered)
                 {
                     DisplayMessage("La planta se ha secado. Terreno arado.");
                     Debug.Log($"Planta {plant.plantName} en {cellPosition} está seca. Se va a resetear la celda.");
                     ResetPlantCell(cellPosition, plant); // Llama al método de reinicio de celda
+                    // El sonido de marchitar se reproduce cuando se detecta el cambio a isWithered en Update
+                    // o aquí si se activa por interacción: PlaySound(witheredPlantSound);
                 }
-                // ----------------------------------------------------
                 else if (plant.isReadyToHarvest)
                 {
                     Debug.Log("Planta lista para cosechar.");
@@ -317,8 +406,16 @@ public class PlantManager : MonoBehaviour
                 }
                 else // Planta en crecimiento
                 {
-                    DisplayMessage($"Planta de {plant.plantName} creciendo: {plant.currentGrowthProgress:F1}/{plant.growthTime:F1}");
-                    Debug.Log("Planta en crecimiento. No lista para cosechar.");
+                    // ¡NUEVO!: Opción para regar la planta
+                    if (!plant.isWatered)
+                    {
+                        WaterPlant(cellPosition, plant); // Llama al método de regar
+                    }
+                    else
+                    {
+                        DisplayMessage($"Planta de {plant.plantName} creciendo: {plant.currentGrowthProgress:F1}/{plant.growthTime:F1}. Ya está regada.");
+                        Debug.Log("Planta en crecimiento. No lista para cosechar y ya regada.");
+                    }
                 }
             }
             // Si la celda existe en plantedAreas pero no tiene una planta "plantada" (ej. está arada pero vacía)
@@ -371,6 +468,7 @@ public class PlantManager : MonoBehaviour
             // Asegúrate de añadir una nueva PlantData limpia para la celda arada
             plantedAreas[cellPosition] = new PlantData(cellPosition);
             Debug.Log($"Celda {cellPosition} arada y PlantData creada (isPlanted=false).");
+            PlaySound(tillSoilSound); // Reproduce el sonido de arado
         }
         else if (groundTilemap.GetTile(cellPosition) == plowedGroudTile)
         {
@@ -421,8 +519,10 @@ public class PlantManager : MonoBehaviour
                     newPlant.currentStage = 0;
                     newPlant.currentGrowthProgress = 0f;
                     newPlant.harvestedItemType = plantDefToPlant.harvestedItemName;
+                    newPlant.isWatered = true; // La planta recién sembrada se considera regada al inicio
+                    newPlant.timeSinceLastWatered = 0f;
 
-                    // --- NUEVO: Asignar propiedades de marchitamiento ---
+                    // --- Asignar propiedades de marchitamiento ---
                     newPlant.witheredSprite = plantDefToPlant.witheredSprite;
                     newPlant.witheredDuration = plantDefToPlant.witheredDuration;
                     newPlant.isWithered = false; // Asegurar que no está seca al sembrar
@@ -430,12 +530,18 @@ public class PlantManager : MonoBehaviour
                     // ----------------------------------------------------
 
                     plantedAreas[cellPosition] = newPlant; // Guarda los cambios en el diccionario
-                    UpdatePlantSprite(newPlant);
+                    UpdatePlantSprite(newPlant); // Update the visual for the newly planted sprite
 
                     inventory[seedInventoryName]--;
                     UpdateInventoryUI();
                     DisplayMessage($"¡Sembrada {newPlant.plantName}!");
                     Debug.Log($"¡{newPlant.plantName} sembrada exitosamente en {cellPosition}!");
+
+                    PlaySound(plantSeedSound); // Reproduce el sonido de siembra
+
+                    // ¡NUEVO!: Invoca el evento OnPlantPlanted
+                    OnPlantPlanted?.Invoke(newPlant);
+
                     return true;
                 }
                 else
@@ -445,6 +551,7 @@ public class PlantManager : MonoBehaviour
             }
             else
             {
+                DisplayMessage($"No tienes suficientes {seedInventoryName} en el inventario.");
                 Debug.Log($"Fallo al sembrar {seedInventoryName}: No hay suficientes semillas en el inventario.");
             }
         }
@@ -473,8 +580,9 @@ public class PlantManager : MonoBehaviour
                 UpdateInventoryUI();
                 DisplayMessage($"¡Cosechada {plant.plantName}! Has obtenido 1 {harvestedItem}.");
 
-                // ¡NUEVA LÍNEA CLAVE PARA QUE AVANCEN LAS MISIONES!!!
-                // Se invoca el evento, pasando los datos completos de la planta
+                PlaySound(harvestPlantSound); // Reproduce el sonido de cosecha
+
+                // Invoca el evento OnPlantHarvested
                 OnPlantHarvested?.Invoke(plant);
             }
             else
@@ -492,6 +600,39 @@ public class PlantManager : MonoBehaviour
         }
     }
 
+    // --- NUEVO MÉTODO: Para regar una planta ---
+    void WaterPlant(Vector3Int cellPosition, PlantData plant)
+    {
+        if (plant.isPlanted && !plant.isReadyToHarvest && !plant.isWithered)
+        {
+            if (!plant.isWatered)
+            {
+                plant.isWatered = true;
+                plant.timeSinceLastWatered = 0f; // Reinicia el contador de tiempo de regado
+                plantedAreas[cellPosition] = plant; // Guarda los cambios
+
+                DisplayMessage($"¡Regada la planta de {plant.plantName}!");
+                Debug.Log($"Planta {plant.plantName} en {cellPosition} ha sido regada.");
+
+                // Apply the watered color immediately
+                UpdatePlantSprite(plant);
+                PlaySound(waterPlantSound); // Reproduce el sonido de regar
+
+                // ¡NUEVO!: Invoca el evento OnPlantWatered
+                OnPlantWatered?.Invoke(plant);
+            }
+            else
+            {
+                DisplayMessage($"La planta de {plant.plantName} ya está regada.");
+            }
+        }
+        else
+        {
+            DisplayMessage($"No puedes regar esta celda.");
+        }
+    }
+    // ------------------------------------------
+
     // --- NUEVO MÉTODO: Reinicia los datos de la celda y los tiles visuales ---
     void ResetPlantCell(Vector3Int cellPosition, PlantData plant)
     {
@@ -501,12 +642,15 @@ public class PlantManager : MonoBehaviour
         // Resetea los datos de la PlantData para que la celda esté lista para una nueva siembra
         plant.isPlanted = false;
         plant.isReadyToHarvest = false;
+        // Si la planta estaba seca, ya se reproduce el sonido en Update o en HandleCellInteraction
         plant.isWithered = false; // ¡IMPORTANTE! Resetear también el estado de seca
         plant.currentStage = 0;
         plant.currentGrowthProgress = 0f;
         plant.timeSinceReadyToHarvest = 0f; // ¡IMPORTANTE! Resetear el contador de secado
+        plant.isWatered = false; // Reiniciar estado de regado
+        plant.timeSinceLastWatered = 0f;
 
-        // Opcional: podrías resetear otros campos de `plant` si prefieres una PlantData "virgen"
+        // Opcional: podrías resetear otros campos de `plant` si prefieres una PlantData "virgen`
         plant.plantName = "";
         plant.growthStages = null;
         plant.harvestedItemType = "";
@@ -520,7 +664,16 @@ public class PlantManager : MonoBehaviour
     void UpdatePlantSprite(PlantData plant)
     {
         Tile plantVisualTile = ScriptableObject.CreateInstance<Tile>();
-        plantVisualTile.color = Color.white; // Asegurar color blanco
+
+        // NEW: Set color based on watered state
+        if (plant.isWatered && !plant.isReadyToHarvest && !plant.isWithered) // Only tint if watered, not ready to harvest, and not withered
+        {
+            plantVisualTile.color = wateredColor;
+        }
+        else
+        {
+            plantVisualTile.color = defaultPlantColor;
+        }
 
         if (plant.isPlanted)
         {
@@ -569,6 +722,20 @@ public class PlantManager : MonoBehaviour
         }
     }
 
+    public void AddSeedsToInventory(string seedName, int amount)
+    {
+        if (inventory.ContainsKey(seedName))
+        {
+            inventory[seedName] += amount;
+        }
+        else
+        {
+            inventory.Add(seedName, amount);
+        }
+        UpdateInventoryUI();
+        DisplayMessage($"Has recibido {amount} {seedName} como recompensa!");
+    }
+
     void UpdateInventoryUI()
     {
         if (inventoryText != null)
@@ -584,4 +751,27 @@ public class PlantManager : MonoBehaviour
             inventoryText.text = inventoryString;
         }
     }
+
+    // --- NUEVO MÉTODO GENÉRICO PARA REPRODUCIR SONIDOS ---
+    void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip); // PlayOneShot reproduce el clip sin detener el actual
+        }
+        else if (clip == null)
+        {
+            Debug.LogWarning("Intento de reproducir un sonido nulo. Asegúrate de asignar todos los AudioClips en el Inspector.");
+        }
+    }
+    // ----------------------------------------------------
+
+    // --- NUEVO MÉTODO PARA REPRODUCIR SONIDO DE MISIÓN COMPLETADA ---
+    // Este método debería ser público para que MissionManager pueda llamarlo.
+    public void PlayMissionCompleteSound()
+    {
+        PlaySound(missionCompleteSound);
+        Debug.Log("Sonido de misión completada reproducido.");
+    }
+    // --------------------------------------------------------------
 }
