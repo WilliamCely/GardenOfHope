@@ -551,9 +551,9 @@ MonoBehaviour:
     harvestedItemName: Uva
   playerTransform: {fileID: 5112742801583607356, guid: 3d9e767bedba67f44a127807e8c1395c, type: 3}
   tillSoilSound: {fileID: 8300000, guid: 12a39ced9d245254f9a41e722b6f2f68, type: 3}
-  plantSeedSound: {fileID: 0}
-  waterPlantSound: {fileID: 8300000, guid: 3140ab9eede2a53438851cb8c1f04eb3, type: 3}
-  harvestPlantSound: {fileID: 0}
+  plantSeedSound: {fileID: 8300000, guid: 5ce0d9655ba11ab41ad3200eb4fbf31d, type: 3}
+  waterPlantSound: {fileID: 8300000, guid: 8c915bee4a6e5b24dbf532af4c48ca07, type: 3}
+  harvestPlantSound: {fileID: 8300000, guid: 117c0b505bcb27d45bf67436ccf7ab97, type: 3}
   witheredPlantSound: {fileID: 0}
   missionCompleteSound: {fileID: 8300000, guid: e5b16f8cc0733f348860e9a3f2cab122, type: 3}
   wateredColor: {r: 0.7, g: 0.9, b: 1, a: 1}
@@ -572,69 +572,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missionObjectiveText: {fileID: 908639503}
   plantManager: {fileID: 519997621}
-  maxActiveMissions: 1
-  timeBetweenNewMissions: 30
-  activeMissions:
-  - missionName: Sembrar Tulipanes
-    description: Siembra 4 Tulipanes
-    plantTypeRequired: Tulipan
-    amountRequired: 4
-    currentProgress: 0
-    isCompleted: 0
-    type: 1
-    rewardSeedType: Tulipan
-    rewardAmount: 5
-    rewardClaimed: 0
-  - missionName: Regar Uvas
-    description: Riega 5 Plantas de uva
-    plantTypeRequired: Uva
-    amountRequired: 5
-    currentProgress: 0
-    isCompleted: 0
-    type: 2
-    rewardSeedType: Uva
-    rewardAmount: 6
-    rewardClaimed: 0
-  - missionName: Cosechar Zanahorias
-    description: Cosechar 6 zanahorias
-    plantTypeRequired: Zanahoria
-    amountRequired: 6
-    currentProgress: 0
-    isCompleted: 0
-    type: 0
-    rewardSeedType: Zanahoria
-    rewardAmount: 7
-    rewardClaimed: 0
-  - missionName: Regar plantas de platano
-    description: Regar 6 plantas de platano
-    plantTypeRequired: Platano
-    amountRequired: 6
-    currentProgress: 0
-    isCompleted: 0
-    type: 2
-    rewardSeedType: Platano
-    rewardAmount: 8
-    rewardClaimed: 0
-  - missionName: Cosechar girasoles
-    description: Cosechar 4 girasoles
-    plantTypeRequired: Girasol
-    amountRequired: 4
-    currentProgress: 0
-    isCompleted: 0
-    type: 0
-    rewardSeedType: Girasol
-    rewardAmount: 4
-    rewardClaimed: 0
-  - missionName: Siembra Tomates
-    description: Sembrar 6 plantas de tomate
-    plantTypeRequired: Tomate
-    amountRequired: 6
-    currentProgress: 0
-    isCompleted: 0
-    type: 1
-    rewardSeedType: Tomate
-    rewardAmount: 8
-    rewardClaimed: 0
+  maxActiveMissions: 2
+  activeMissions: []
 --- !u!82 &519997623
 AudioSource:
   m_ObjectHideFlags: 0

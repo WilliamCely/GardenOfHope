@@ -2,6 +2,7 @@
 using TMPro; // Para TextMeshPro
 using System.Collections.Generic;
 using System.Linq; // Para usar .Any() y .Remove() en Listas
+using System; // <--- Importante: Para usar System.Random
 
 [System.Serializable]
 public enum MissionType { Harvest, Plant, Water }
@@ -45,18 +46,21 @@ public class Mission
             switch (actionType)
             {
                 case MissionType.Harvest:
+                    // Compara con el tipo de ítem cosechado
                     if (plantData.harvestedItemType == plantTypeRequired)
                     {
                         relevantAction = true;
                     }
                     break;
                 case MissionType.Plant:
+                    // Compara con el nombre de la planta
                     if (plantData.plantName == plantTypeRequired)
                     {
                         relevantAction = true;
                     }
                     break;
                 case MissionType.Water:
+                    // Si plantTypeRequired está vacío, aplica a cualquier planta; de lo contrario, solo a la específica.
                     if (string.IsNullOrEmpty(plantTypeRequired) || plantData.plantName == plantTypeRequired)
                     {
                         relevantAction = true;
@@ -120,42 +124,39 @@ public class MissionManager : MonoBehaviour
     public PlantManager plantManager; // <-- ¡Asegúrate de asignar esto en el Inspector!
 
     [Header("Configuración de Misiones")]
-    public int maxActiveMissions = 3; // Cuántas misiones pueden estar activas a la vez
-    public float timeBetweenNewMissions = 30f; // Tiempo en segundos para intentar activar una nueva misión
+    public int maxActiveMissions = 2; // <--- CAMBIADO a 2
 
     private List<Mission> availableMissions = new List<Mission>(); // Todas las misiones posibles
     public List<Mission> activeMissions = new List<Mission>();    // Misiones actualmente en progreso
-    private List<Mission> completedMissions = new List<Mission>(); // Misiones que ya se completaron y se les dio recompensa
 
-    private float newMissionTimer;
+    private System.Random rng; // <--- CORRECCIÓN: Especifica System.Random
 
     void Start()
     {
         if (missionObjectiveText == null) Debug.LogError("Mission Objective Text (TextMeshProUGUI) no asignado en MissionManager.");
         if (plantManager == null) Debug.LogError("Plant Manager no asignado en MissionManager. ¡Asigna el objeto con el script PlantManager!");
 
-        // Suscribirse a los eventos del PlantManager
+        rng = new System.Random(); 
+
         PlantManager.OnPlantHarvested += OnPlantHarvestedHandler;
         PlantManager.OnPlantPlanted += OnPlantPlantedHandler;
         PlantManager.OnPlantWatered += OnPlantWateredHandler;
 
         // --- Definir TODAS las misiones posibles aquí ---
-        availableMissions.Add(new Mission("Cosechar Zanahorias I", "Cosecha 5 zanahorias para el mercado local.", "Zanahoria", 5, MissionType.Harvest, "Semilla de Zanahoria", 2));
-        availableMissions.Add(new Mission("Sembrar Tomates I", "Siembra 3 plantas de tomate.", "Tomate", 3, MissionType.Plant, "Semilla de Tomate", 1));
-        availableMissions.Add(new Mission("Regar Cultivos Variados I", "Riega 10 plantas de cualquier tipo.", "", 10, MissionType.Water, "Semilla de Girasol", 3));
-        availableMissions.Add(new Mission("Regar Zanahorias Específicas I", "Riega 5 plantas de zanahoria.", "Zanahoria", 5, MissionType.Water, "Semilla de Zanahoria", 1));
-        availableMissions.Add(new Mission("Cosechar Uvas I", "Cosecha 7 uvas del viñedo.", "Uva", 7, MissionType.Harvest, "Semilla de Uva", 3));
-        availableMissions.Add(new Mission("Sembrar Plátanos I", "Siembra 2 plátanos exóticos.", "Platano", 2, MissionType.Plant, "Semilla de Platano", 1));
-        availableMissions.Add(new Mission("Cosechar Girasoles I", "Cosecha 3 girasoles para aceite.", "Girasol", 3, MissionType.Harvest, "Semilla de Girasol", 2));
-        availableMissions.Add(new Mission("Regar Tomates I", "Riega 4 plantas de tomate.", "Tomate", 4, MissionType.Water, "Semilla de Tomate", 1));
-        // Puedes añadir más misiones aquí: "Cosechar Zanahorias II", "Sembrar Tomates II", etc. con mayores cantidades y/o recompensas
-        // availableMissions.Add(new Mission("Cosechar Zanahorias II", "Cosecha 10 zanahorias para el chef.", "Zanahoria", 10, MissionType.Harvest, "Semilla de Zanahoria", 5));
-        // -----------------------------------------------------
+        availableMissions.Add(new Mission("Cosechar Zanahorias I", "Cosecha 5 Zanahorias para el mercado local.", "Zanahoria", 5, MissionType.Harvest, "Semilla de Zanahoria", 4));
+        availableMissions.Add(new Mission("Sembrar Tomates I", "Siembra 3 plantas de Tomate.", "Tomate", 3, MissionType.Plant, "Semilla de Tomate", 3));
+        availableMissions.Add(new Mission("Regar Cultivos Variados I", "Riega 10 plantas de cualquier tipo.", "", 10, MissionType.Water, "Semilla de Girasol", 6));
+        availableMissions.Add(new Mission("Regar Zanahorias Específicas I", "Riega 5 plantas de Zanahoria.", "Zanahoria", 5, MissionType.Water, "Semilla de Zanahoria", 5));
+        availableMissions.Add(new Mission("Cosechar Uvas I", "Cosecha 7 Uvas del viñedo.", "Uva", 7, MissionType.Harvest, "Semilla de Uva", 5));
+        availableMissions.Add(new Mission("Sembrar Plátanos I", "Siembra 2 Plátanos exóticos.", "Platano", 2, MissionType.Plant, "Semilla de Platano", 3));
+        availableMissions.Add(new Mission("Cosechar Girasoles I", "Cosecha 3 Girasoles para aceite.", "Girasol", 3, MissionType.Harvest, "Semilla de Girasol", 5));
+        availableMissions.Add(new Mission("Regar Tomates I", "Riega 4 plantas de Tomate.", "Tomate", 4, MissionType.Water, "Semilla de Tomate", 6));
+        availableMissions.Add(new Mission("Cosechar Tulipanes II", "Cosecha 10 Tulipanes.", "Tulipan", 10, MissionType.Harvest, "Semilla de Tulipan", 6));
+        availableMissions.Add(new Mission("Sembrar Tulipanes", "Siembra 5 plantas de Tulipan para Halloween.", "Tulipan", 5, MissionType.Plant, "Semilla de Tulipan", 5));
 
-        ShuffleMissions(); // Mezcla las misiones al inicio
-        ActivateInitialMissions(); // Activa algunas misiones al inicio del juego
+        ShuffleMissions(); // Mezcla todas las misiones al inicio
+        ActivateInitialMissions(); // Activa las primeras 2 misiones (o maxActiveMissions)
 
-        newMissionTimer = timeBetweenNewMissions; // Inicializa el temporizador
         UpdateMissionUI();
     }
 
@@ -166,18 +167,10 @@ public class MissionManager : MonoBehaviour
         PlantManager.OnPlantWatered -= OnPlantWateredHandler;
     }
 
+    // El Update ya no necesita el timer de nuevas misiones, las misiones se activan al completar
     void Update()
     {
-        // Solo intenta activar una nueva misión si hay espacio y misiones disponibles
-        if (activeMissions.Count < maxActiveMissions && availableMissions.Count > 0)
-        {
-            newMissionTimer -= Time.deltaTime;
-            if (newMissionTimer <= 0)
-            {
-                TryActivateNewMission();
-                newMissionTimer = timeBetweenNewMissions; // Reinicia el temporizador
-            }
-        }
+        // La activación de nuevas misiones se maneja en CheckMissionCompletionAndReward
     }
 
     void OnPlantHarvestedHandler(PlantData plant)
@@ -225,70 +218,85 @@ public class MissionManager : MonoBehaviour
                 mission.rewardClaimed = true;
                 Debug.Log($"¡Recompensa de misión para '{mission.missionName}' otorgada: {mission.rewardAmount} {mission.rewardSeedType}!");
 
-                // ¡AQUÍ ES DONDE REPRODUCIMOS EL SONIDO DE MISIÓN COMPLETADA!
                 if (plantManager != null)
                 {
                     plantManager.PlayMissionCompleteSound();
                 }
 
-                // Una vez completada y reclamada la recompensa, la movemos a misiones completadas
-                // No la eliminamos de activeMissions aquí directamente, se gestiona en UpdateMissionUI o en TryActivateNewMission
-                // para que no se vea duplicada o eliminada abruptamente si no la queremos ver más.
+                // Intentar activar una nueva misión inmediatamente después de completar esta
+                TryActivateNewMission();
             }
         }
     }
 
-    // --- NUEVO: Mezclar la lista de misiones disponibles ---
+    // Mezclar la lista de misiones disponibles
     void ShuffleMissions()
     {
-        System.Random rng = new System.Random();
         int n = availableMissions.Count;
         while (n > 1)
         {
             n--;
-            int k = rng.Next(n + 1);
+            int k = rng.Next(n + 1); // Usa la instancia de System.Random
             Mission value = availableMissions[k];
             availableMissions[k] = availableMissions[n];
             availableMissions[n] = value;
         }
     }
 
-    // --- NUEVO: Activar un número inicial de misiones ---
     void ActivateInitialMissions()
     {
         // Activa misiones hasta el límite o hasta que no queden disponibles
         for (int i = 0; i < maxActiveMissions && availableMissions.Count > 0; i++)
         {
-            TryActivateNewMission(); // Llama al método que activa una misión
+            AddRandomMissionToActive(); 
         }
     }
 
-    // --- NUEVO: Intentar activar una nueva misión aleatoria ---
-    void TryActivateNewMission()
+    // Añadir una misión aleatoria a las activas
+    void AddRandomMissionToActive()
     {
-        // Limpiar misiones completadas que ya reclamaron recompensa de la lista activa
-        // para hacer espacio para nuevas misiones.
-        activeMissions.RemoveAll(m => m.isCompleted && m.rewardClaimed);
-
-        if (activeMissions.Count < maxActiveMissions && availableMissions.Count > 0)
+        if (availableMissions.Count > 0)
         {
-            // Selecciona la primera misión de la lista barajada (o una al azar si lo prefieres)
-            // Usar la primera es bueno si quieres un flujo más "lineal" pero aún aleatorio por el shuffle inicial.
-            Mission newMission = availableMissions[0];
-            availableMissions.RemoveAt(0); // Quita la misión de la lista de disponibles
+            int randomIndex = rng.Next(availableMissions.Count); 
+            Mission newMission = availableMissions[randomIndex]; 
+            availableMissions.RemoveAt(randomIndex); 
 
             activeMissions.Add(newMission);
-            Debug.Log($"¡Nueva misión activada: {newMission.missionName}!");
-            UpdateMissionUI(); // Actualiza la UI para mostrar la nueva misión
+            Debug.Log($"¡Nueva misión activada aleatoriamente: {newMission.missionName}!");
+        }
+        else
+        {
+            Debug.LogWarning("No quedan misiones disponibles para activar. Considera rellenar la lista o implementar un final de juego.");
+        }
+    }
+
+    // Intentar activar una nueva misión aleatoria, limpiando las completadas primero
+    void TryActivateNewMission()
+    {
+        // Primero, limpia las misiones que ya fueron completadas y recompensadas
+        activeMissions.RemoveAll(m => m.isCompleted && m.rewardClaimed);
+
+        // Si hay espacio para una nueva misión Y hay misiones disponibles
+        if (activeMissions.Count < maxActiveMissions && availableMissions.Count > 0)
+        {
+            AddRandomMissionToActive(); // Añade una misión aleatoria
+            UpdateMissionUI(); // Actualiza la UI después de añadir
         }
         else if (availableMissions.Count == 0 && activeMissions.All(m => m.isCompleted && m.rewardClaimed))
         {
             Debug.Log("Todas las misiones han sido completadas y sus recompensas reclamadas. Puedes implementar lógica para generar nuevas misiones o un final.");
-            // Aquí podrías recargar las misiones, generar misiones infinitas, o indicar un fin del juego/contenido.
-            // Por ejemplo, para un juego simple, podrías reiniciar la lista de availableMissions y volver a barajar.
-            // availableMissions.AddRange(allPossibleMissionsDefinedSomewhere); // Donde allPossibleMissions es una copia de las misiones iniciales
+            // Si todas las misiones han sido completadas y reclamadas, puedes reiniciar la lista de misiones
+            // o cargar más misiones si tienes un pool más grande.
+            // Ejemplo de reiniciar:
+            // availableMissions.Clear();
+            // // Vuelve a añadir todas las misiones originales
+            // availableMissions.Add(new Mission("Cosechar Zanahorias I", "Cosecha 5 Zanahorias para el mercado local.", "Zanahoria", 5, MissionType.Harvest, "Semilla de Zanahoria", 2));
+            // availableMissions.Add(new Mission("Sembrar Tomates I", "Siembra 3 plantas de Tomate.", "Tomate", 3, MissionType.Plant, "Semilla de Tomate", 1));
+            // // ... y así sucesivamente para todas tus misiones
             // ShuffleMissions();
+            // TryActivateNewMission(); // Intenta activar una nueva ahora que hay disponibles
         }
+        UpdateMissionUI(); 
     }
 
     public void UpdateMissionUI()
@@ -296,23 +304,26 @@ public class MissionManager : MonoBehaviour
         if (missionObjectiveText != null)
         {
             string uiText = "Misiones Activas:\n";
-            if (activeMissions.Count == 0)
+            // Solo muestra las misiones que NO han sido completadas y reclamadas de la lista activa
+            var currentVisibleMissions = activeMissions.Where(m => !(m.isCompleted && m.rewardClaimed)).ToList();
+
+            if (currentVisibleMissions.Count == 0)
             {
                 uiText += "No hay misiones activas en este momento.";
             }
             else
             {
-                foreach (Mission mission in activeMissions)
+                foreach (Mission mission in currentVisibleMissions)
                 {
                     uiText += "- " + mission.GetStatusText() + "\n";
                 }
             }
 
-            // Opcional: Mostrar misiones completadas que aún no han reclamado recompensa
+            // Muestra misiones que están completadas pero aún no se han retirado de la lista activa
             var completedUnclaimed = activeMissions.Where(m => m.isCompleted && !m.rewardClaimed).ToList();
             if (completedUnclaimed.Any())
             {
-                uiText += "\n¡Misiones Completadas (Reclama Recompensa!):\n";
+                uiText += "\n¡Misiones Completadas (Recompensa Otorgada!):\n";
                 foreach (var mission in completedUnclaimed)
                 {
                     uiText += "- " + mission.GetStatusText() + "\n";
