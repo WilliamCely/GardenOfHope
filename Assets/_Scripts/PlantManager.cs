@@ -142,6 +142,7 @@ public class PlantManager : MonoBehaviour
     [Header("UI Elementos")]
     public TMPro.TextMeshProUGUI infoText;        // Asignar desde el Inspector
     public TMPro.TextMeshProUGUI inventoryText; // Para mostrar el inventario
+    public TMPro.TextMeshProUGUI playerNameDisplayText; // ¡NUEVO! Para mostrar el nombre del jugador
 
     [Header("Tipos de Plantas")]
     public PlantDefinition[] plantDefinitions; // Array de definiciones de plantas
@@ -199,6 +200,7 @@ public class PlantManager : MonoBehaviour
         if (infoText == null) Debug.LogError("Info Text (TextMeshProUGUI) no asignado en PlantManager. ¡Arrastra el objeto InfoText del Canvas al Inspector!");
         if (inventoryText == null) Debug.LogWarning("Inventory Text (TextMeshProUGUI) no asignado en PlantManager. Considera arrastrar un nuevo TextMeshProUGUI del Canvas al Inspector para ver el inventario.");
         if (playerTransform == null) Debug.LogError("Player Transform no asignado en PlantManager. ¡Arrastra el objeto Player del Hierarchy al Inspector!");
+        if (playerNameDisplayText == null) Debug.LogWarning("Player Name Display Text (TextMeshProUGUI) no asignado en PlantManager. ¡Arrastra un nuevo TextMeshProUGUI del Canvas al Inspector para mostrar el nombre del jugador!");
 
         // --- INICIALIZACIÓN CRÍTICA DEL TERRENO ---
         if (groundTilemap != null)
@@ -283,6 +285,18 @@ public class PlantManager : MonoBehaviour
         // Ejemplo (si MissionManager.OnMissionCompleted es estático):
         // MissionManager.OnMissionCompleted += PlayMissionCompleteSound;
         // Si no es estático, necesitarás obtener la instancia de MissionManager
+
+        // --- NUEVO: Cargar y mostrar el nombre del jugador ---
+        if (playerNameDisplayText != null)
+        {
+            // La clave "PlayerName" debe coincidir con la que usaste en tu script PlayerSelectionUI
+            // para guardar el nombre. Te recomiendo usar una constante compartida.
+            // Si el nombre no se encontró, mostrar un nombre por defecto.
+            string loadedPlayerName = PlayerPrefs.GetString("PlayerName", "Jugador Anónimo"); //
+            playerNameDisplayText.text = $"Jugador: {loadedPlayerName}"; //
+            Debug.Log($"Nombre del jugador cargado: {loadedPlayerName}"); //
+        }
+        // --- FIN NUEVO ---
     }
 
     void OnEnable()
